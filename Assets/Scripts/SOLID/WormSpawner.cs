@@ -8,7 +8,7 @@ public class WormSpawner : MonoBehaviour
     [SerializeField] private float difficultyRampSpeed = 0.01f;
 
     [Header("Spawn Area")]
-    [SerializeField] private Vector2 xSpawnRange = new Vector2(-4f, 4f);
+    [SerializeField] private Vector2 xSpawnRange = new Vector2(-1f, 1f);
     [SerializeField] private float ySpawnOffset = 1f;
 
     private float spawnTimer;

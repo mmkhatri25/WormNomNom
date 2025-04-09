@@ -13,13 +13,13 @@ public class PlayerController : MonoBehaviour
     private PowerSlideUI _powerSlideUI;
     private IAudioPlayer _audioPlayer;
 
+    [SerializeField] private AnimationCurve jumpCurve;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private LayerMask wormLayer;
     [SerializeField] private JumpSettings jumpSettings;
     public Slider PowerSlider;
     public Button PowerButton;
-    public AudioClip jumpSound, eatSound;
-
+    public AudioClip jumpSound, eatSound, powerSound;
 
     [Header("Health System")]
     public GameObject leftEye;
@@ -49,13 +49,15 @@ public class PlayerController : MonoBehaviour
     [Header("Gameover UI")]
     public GameObject GameOverPanel;
 
+    private Rigidbody _rb;
 
     private void Awake()
     {
         _inputHandler = new MouseInputHandler();
+        _rb = GetComponent<Rigidbody>();
         _mover = new PlayerMover(transform);
         _animator = new PlayerAnimator(GetComponent<Animator>());
-        _jumper = new PlayerJumper(GetComponent<Rigidbody>(), GetComponent<Animator>(), transform);
+        _jumper = new PlayerJumper(_rb, GetComponent<Animator>(), transform, groundLayer);
         _powerSlideUI = new PowerSlideUI();
         _audioPlayer = GetComponent<IAudioPlayer>();
         PowerButton.gameObject.SetActive(false);
@@ -65,7 +67,6 @@ public class PlayerController : MonoBehaviour
 
         _playerHealth.OnHealthChanged += _playerUI.UpdateHealth;
         _playerHealth.OnDeath += ShowDeath;
-
     }
 
     private void Update()
@@ -78,10 +79,10 @@ public class PlayerController : MonoBehaviour
         _mover.Move(direction);
         _animator.UpdateAnimation(isMoving, false);
 
-        if (_inputHandler.JumpRequested)
+        if (_inputHandler.JumpRequested && _jumper.IsGrounded())
         {
             _audioPlayer?.PlaySound(jumpSound);
-            _jumper.JumpToHeight(_inputHandler.TargetTapWorldY);
+            _jumper.Jump(direction);
             _inputHandler.ResetJumpFlag();
         }
 
@@ -92,7 +93,7 @@ public class PlayerController : MonoBehaviour
 
         if (_inputHandler.PowerSlideRequested)
         {
-            ActivatePowerSlide();
+            StartCoroutine( ActivatePowerSlide());
             _inputHandler.ResetPowerSlideFlag();
         }
     }
@@ -104,7 +105,6 @@ public class PlayerController : MonoBehaviour
         IWorm worm = other.GetComponent<IWorm>();
         if (worm != null)
         {
-            //worm.GetTransform().GetComponent<Collider>().enabled = false;
             worm.Eat();
             _audioPlayer?.PlaySound(eatSound);
             _animator.UpdateAnimation(isMoving, true);
@@ -116,7 +116,7 @@ public class PlayerController : MonoBehaviour
             {
                 GrowFat();
                 FillPowerSlide();
-            }  
+            }
         }
     }
 
@@ -149,8 +149,10 @@ public class PlayerController : MonoBehaviour
         PowerButton.gameObject.SetActive(false);
     }
 
-    private void ActivatePowerSlide()
+    IEnumerator ActivatePowerSlide()
     {
+        _audioPlayer?.PlaySound(powerSound);
+        yield return new WaitForSeconds(2f);
         var normalWorms = GameObject.FindGameObjectsWithTag("Worm");
         var poisonWorms = GameObject.FindGameObjectsWithTag("PoisonousWorm");
 
@@ -181,15 +183,12 @@ public class PlayerController : MonoBehaviour
 
     private void ShowRevivePopup()
     {
-        //RevivePanel.SetActive(true);
         _animator.SetPuaseAnimator(0);
 
         RevivePanel.GetComponent<Animation>().Play("Window-In");
         ContinueButton.onClick.AddListener(OnContinueClicked);
         NoThanksButton.onClick.AddListener(OnNoThanksClicked);
         _reviveCoroutine = StartCoroutine(ReviveCountdown());
-        //Time.timeScale = 0;
-
     }
 
     private IEnumerator ReviveCountdown()
@@ -212,13 +211,11 @@ public class PlayerController : MonoBehaviour
 
     private void OnContinueClicked()
     {
-        //Time.timeScale = 1;
         _animator.SetPuaseAnimator(1);
 
         _isReviving = false;
         if (_reviveCoroutine != null) StopCoroutine(_reviveCoroutine);
 
-        //RevivePanel.SetActive(false);
         RevivePanel.GetComponent<Animation>().Play("Window-Out");
 
         ContinueButton.onClick.RemoveListener(OnContinueClicked);
@@ -232,13 +229,11 @@ public class PlayerController : MonoBehaviour
 
     private void OnNoThanksClicked()
     {
-        //Time.timeScale = 1;
         _animator.PlayDeath(); // Make sure Animator has "Die" trigger
 
         _isReviving = false;
         if (_reviveCoroutine != null) StopCoroutine(_reviveCoroutine);
 
-        //RevivePanel.SetActive(false);
         RevivePanel.GetComponent<Animation>().Play("Window-Out");
 
         ContinueButton.onClick.RemoveListener(OnContinueClicked);
@@ -249,11 +244,9 @@ public class PlayerController : MonoBehaviour
 
     private void GameOver()
     {
-        //Time.timeScale = 1;
         _animator.PlayDeath(); // Make sure Animator has "Die" trigger
 
         Debug.Log("Game Over - implement scene change or restart here.");
         GameOverPanel.GetComponent<Animation>().Play("Game-Over-In");
-        // Example: SceneManager.LoadScene("GameOverScene");
     }
 }

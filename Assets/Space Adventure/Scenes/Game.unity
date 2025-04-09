@@ -2758,7 +2758,7 @@ GameObject:
   - component: {fileID: 719286298}
   - component: {fileID: 719286297}
   - component: {fileID: 719286296}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2793,7 +2793,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 719286295}
-  m_Enabled: 0
+  m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -7110,7 +7110,7 @@ MonoBehaviour:
   initialSpawnInterval: 2
   minSpawnInterval: 0.2
   difficultyRampSpeed: 0.01
-  xSpawnRange: {x: -3, y: 3}
+  xSpawnRange: {x: -2.3, y: 2.3}
   ySpawnOffset: 1
 --- !u!114 &1497930211
 MonoBehaviour:
@@ -7244,7 +7244,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1539805284}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e6a7407a764fe70478262f68ae741b3e, type: 3}
   m_Name: 
@@ -7931,7 +7931,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1621514236}
   m_Layer: 5
-  m_Name: Right (1)
+  m_Name: PowerButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9102,7 +9102,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 7428378067183471805, guid: bdf6e360130e68f44ae1bb9c76596fae, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7428378068253508649, guid: bdf6e360130e68f44ae1bb9c76596fae, type: 3}
       propertyPath: m_Name
@@ -11110,10 +11110,10 @@ GameObject:
   m_Component:
   - component: {fileID: 2427787549937702029}
   - component: {fileID: 2427787549937702024}
-  - component: {fileID: 2427787549937702031}
   - component: {fileID: 2427787549937702035}
   - component: {fileID: 2427787549937702036}
   - component: {fileID: 2427787549937702037}
+  - component: {fileID: 2427787549937702038}
   m_Layer: 0
   m_Name: Chicken
   m_TagString: Untagged
@@ -11141,29 +11141,6 @@ Transform:
   - {fileID: 2427787548769542056}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 145, z: 0}
---- !u!136 &2427787549937702031
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2427787549937702028}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.26
-  m_Height: 0.66957575
-  m_Direction: 1
-  m_Center: {x: 0, y: 0.33830807, z: 0}
 --- !u!54 &2427787549937702035
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -11172,7 +11149,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2427787549937702028}
   serializedVersion: 4
-  m_Mass: 1
+  m_Mass: 0.8
   m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -11189,7 +11166,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 8
   m_CollisionDetection: 0
 --- !u!114 &2427787549937702036
 MonoBehaviour:
@@ -11203,12 +11180,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b49d2d0533a947e29dda3cb95e99d36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  jumpCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   groundLayer:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 128
   wormLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 0
   jumpSettings:
     jumpCurve:
       serializedVersion: 2
@@ -11239,6 +11222,7 @@ MonoBehaviour:
   PowerButton: {fileID: 1165296183}
   jumpSound: {fileID: 8300000, guid: 668b0a17c3fceb14a8af4c0cefec747c, type: 3}
   eatSound: {fileID: 8300000, guid: 9d967e887fcb3254fa1a8df9a8a7a905, type: 3}
+  powerSound: {fileID: 8300000, guid: ca60a9810f85c4db49aa76881fd852fc, type: 3}
   leftEye: {fileID: 1253842291477062288}
   rightEye: {fileID: 8793493630956957376}
   HealthSlider: {fileID: 34954587}
@@ -11259,6 +11243,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 505097c36ba374418bd6593f54864143, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!65 &2427787549937702038
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2427787549937702028}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.60949326, y: 0.9893346, z: 0.46167424}
+  m_Center: {x: -0.19525301, y: 0.4106127, z: -0.2691631}
 --- !u!4 &2638306618823289534
 Transform:
   m_ObjectHideFlags: 0
