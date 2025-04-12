@@ -55,12 +55,12 @@ public class MouseInputHandler
                 JumpRequested = false;
                 JumpDirection = Vector3.zero;
             }
-            else
-            {
-                // It was a tap → jump
-                JumpRequested = true;
-                JumpDirection = Vector3.zero;
-            }
+            //else
+            //{
+            //    // It was a tap → jump
+            //    JumpRequested = true;
+            //    JumpDirection = Vector3.zero;
+            //}
 
             // Reset direction after release
             _direction = Vector3.zero;

@@ -13,7 +13,9 @@ public class WormFaller : MonoBehaviour
     [SerializeField] private float rotationSpeed = 30f;
 
     private float wiggleOffset;
-
+    [SerializeField]
+    private PlayerController _player;
+   
     public void ResetWorm()
     {
         wiggleOffset = Random.Range(0f, Mathf.PI * 2f);
@@ -22,6 +24,8 @@ public class WormFaller : MonoBehaviour
 
     private void Update()
     {
+        if (_player.isPause)
+            return;
         float time = Time.time + wiggleOffset;
         float wiggle = Mathf.Sin(time * wiggleSpeed) * wiggleAmount;
 
