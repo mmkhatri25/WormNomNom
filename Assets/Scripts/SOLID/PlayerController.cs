@@ -1,7 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
@@ -40,6 +42,7 @@ public class PlayerController : MonoBehaviour
     [Header("Revive UI")]
     public GameObject RevivePanel;
     public Text CountdownText;
+    public Slider ReviveSlider;
     public Button ContinueButton;
     public Button NoThanksButton;
 
@@ -50,6 +53,19 @@ public class PlayerController : MonoBehaviour
     public GameObject GameOverPanel;
 
     private Rigidbody _rb;
+
+    public bool isPause;
+
+    public static Action onReviveGame;
+    private void OnEnable()
+    {
+        onReviveGame += ResetGameOnRevive;   
+    }
+    private void OnDisable()
+    {
+        onReviveGame -= ResetGameOnRevive;
+
+    }
 
     private void Awake()
     {
@@ -79,12 +95,12 @@ public class PlayerController : MonoBehaviour
         _mover.Move(direction);
         _animator.UpdateAnimation(isMoving, false);
 
-        if (_inputHandler.JumpRequested && _jumper.IsGrounded())
-        {
-            _audioPlayer?.PlaySound(jumpSound);
-            _jumper.Jump(direction);
-            _inputHandler.ResetJumpFlag();
-        }
+        //if (_inputHandler.JumpRequested && _jumper.IsGrounded())
+        //{
+        //    _audioPlayer?.PlaySound(jumpSound);
+        //    _jumper.Jump(direction);
+        //    _inputHandler.ResetJumpFlag();
+        //}
 
         if (_powerSlideMeter >= _powerSlideFullThreshold)
         {
@@ -183,6 +199,7 @@ public class PlayerController : MonoBehaviour
 
     private void ShowRevivePopup()
     {
+        isPause = true;
         _animator.SetPuaseAnimator(0);
 
         RevivePanel.GetComponent<Animation>().Play("Window-In");
@@ -198,20 +215,49 @@ public class PlayerController : MonoBehaviour
 
         while (countdown > 0)
         {
+            // Update the countdown text.
             CountdownText.text = countdown.ToString();
-            yield return new WaitForSeconds(1f);
+
+            // Calculate the starting and ending slider values for this interval.
+            float startValue = (float)countdown / 5f;
+            float endValue = (float)(countdown - 1) / 5f;
+            float elapsed = 0f;
+            float duration = 1f; // Duration for each countdown step.
+
+            // Smoothly interpolate the slider from startValue to endValue over "duration".
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                ReviveSlider.value = Mathf.Lerp(startValue, endValue, elapsed / duration);
+                yield return null; // Wait for the next frame.
+            }
+
             countdown--;
         }
+
+        // Ensure that the slider and text update to their final state.
+        CountdownText.text = "0";
+        ReviveSlider.value = 0f;
 
         if (_isReviving)
         {
             OnNoThanksClicked();
+            AnalyticsManager.Instance.SendEvent_PlayerDie();
         }
     }
 
+
     private void OnContinueClicked()
     {
+        AnalyticsManager.Instance.SendEvent_PlayerRevive();
+
+        GoogleMobileAdsScript.Instance.ShowRewardBasedVideoForCoin();
+    }
+
+    private void ResetGameOnRevive()
+    {
         _animator.SetPuaseAnimator(1);
+        isPause = false;
 
         _isReviving = false;
         if (_reviveCoroutine != null) StopCoroutine(_reviveCoroutine);
@@ -226,9 +272,9 @@ public class PlayerController : MonoBehaviour
         ResetFatness();
         _animator.UpdateAnimation(false, false); // Idle again
     }
-
     private void OnNoThanksClicked()
     {
+
         _animator.PlayDeath(); // Make sure Animator has "Die" trigger
 
         _isReviving = false;
@@ -248,5 +294,14 @@ public class PlayerController : MonoBehaviour
 
         Debug.Log("Game Over - implement scene change or restart here.");
         GameOverPanel.GetComponent<Animation>().Play("Game-Over-In");
+    }
+    public void OnJump()
+    {
+        if (_jumper.IsGrounded())
+        {
+            _audioPlayer?.PlaySound(jumpSound);
+            _jumper.Jump();
+            _inputHandler.ResetJumpFlag();
+        }
     }
 }

@@ -1,17 +1,19 @@
-﻿using UnityEngine;
+﻿using SpaceAdventure.Asset;
+using UnityEngine;
 
-namespace SpaceAdventure.Asset
-{
+//namespace SpaceAdventure.Asset
+//{
 public class Pause : MonoBehaviour
 {
-    public RocketController rocketController;
+    //public RocketController rocketController;
 
-    #if UNITY_ANDROID
+#if UNITY_ANDROID
         private bool paused;
     #endif
 
     private AnimationController animationController;
-
+    [SerializeField]
+    private PlayerController _player;
     void Start()
     {
         animationController = this.GetComponent<AnimationController>();
@@ -20,8 +22,11 @@ public class Pause : MonoBehaviour
     // When player pressed pause or back/esc button.
     public void PauseGame()
     {
+        
+        _player.isPause = true;
+
         // Pause player controller.
-        rocketController.Pause();
+        //rocketController.Pause();
         // Open pause winodw.
         animationController.OpenWindow();
         // Used to check if game is paused/resumed.
@@ -33,8 +38,9 @@ public class Pause : MonoBehaviour
     // When player pressed resume or back/esc(when paused) button.
     public void ResumeGame()
     {
+        _player.isPause = false;
         // Resume player controller.
-        rocketController.Resume();
+        //rocketController.Resume();
         // Close pause window.
         animationController.CloseWindow();
         // Used to check if game is paused/resumed.
@@ -50,7 +56,7 @@ public class Pause : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Escape)) 
         {
             // Check if player hasn't already crashed. In this case pause will not work.
-            if(!GameOver.instance.crashed)
+            //if(!GameOver.instance.crashed)
             {
                 // Check if game is paused.
                 if(paused)
@@ -66,4 +72,4 @@ public class Pause : MonoBehaviour
         #endif        
     }
 }
-}
+//}

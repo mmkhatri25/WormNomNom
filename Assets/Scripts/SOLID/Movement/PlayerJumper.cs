@@ -31,7 +31,7 @@ public class PlayerJumper
         return false;
     }
 
-    public void Jump(Vector3 direction)
+    public void Jump()
     {
         if (_isJumping) return;
         _isJumping = true;
