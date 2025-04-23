@@ -19,7 +19,16 @@ public class WormFaller : MonoBehaviour
     public void ResetWorm()
     {
         wiggleOffset = Random.Range(0f, Mathf.PI * 2f);
-        fallSpeed = Random.Range(1f,3f);
+        if (this.gameObject.tag =="Vain")
+        {
+            fallSpeed = Random.Range(2f, 4f);
+
+        }
+        else
+        {
+            fallSpeed = Random.Range(1f, 3f);
+
+        }
     }
 
     private void Update()

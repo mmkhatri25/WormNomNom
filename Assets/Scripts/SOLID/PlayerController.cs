@@ -11,7 +11,7 @@ public class PlayerController : MonoBehaviour
     private MouseInputHandler _inputHandler;
     private PlayerMover _mover;
     private PlayerAnimator _animator;
-    private PlayerJumper _jumper;
+    [SerializeField] private PlayerJumper _jumper;
     private PowerSlideUI _powerSlideUI;
     private IAudioPlayer _audioPlayer;
 
@@ -48,6 +48,7 @@ public class PlayerController : MonoBehaviour
 
     private Coroutine _reviveCoroutine;
     private bool _isReviving = false;
+    public bool isGrounded;
 
     [Header("Gameover UI")]
     public GameObject GameOverPanel;
@@ -72,8 +73,9 @@ public class PlayerController : MonoBehaviour
         _inputHandler = new MouseInputHandler();
         _rb = GetComponent<Rigidbody>();
         _mover = new PlayerMover(transform);
-        _animator = new PlayerAnimator(GetComponent<Animator>());
-        _jumper = new PlayerJumper(_rb, GetComponent<Animator>(), transform, groundLayer);
+        _animator = new PlayerAnimator(this.transform.GetChild(0).gameObject.GetComponent<Animator>());
+        _jumper = new PlayerJumper(_rb, transform.GetChild(0).GetComponent<Animator>(), transform, groundLayer);
+        isGrounded = _jumper.IsGrounded();
         _powerSlideUI = new PowerSlideUI();
         _audioPlayer = GetComponent<IAudioPlayer>();
         PowerButton.gameObject.SetActive(false);
@@ -113,7 +115,7 @@ public class PlayerController : MonoBehaviour
             _inputHandler.ResetPowerSlideFlag();
         }
     }
-
+    public bool isVainActive;
     private void OnTriggerEnter(Collider other)
     {
         bool isMoving = _inputHandler.IsMoving();
@@ -127,6 +129,17 @@ public class PlayerController : MonoBehaviour
             if (worm is PoisonousWorm)
             {
                 _playerHealth.EatPoisonousWorm();
+            }
+            else if (worm is Vain)
+            {
+                if (isVainActive == false)
+                {
+                    if(_currentFatness>1)
+                    ResetHalfFatness();
+
+                }
+
+
             }
             else
             {
@@ -149,6 +162,25 @@ public class PlayerController : MonoBehaviour
     {
         _currentFatness = 1f;
         transform.localScale = Vector3.one;
+        ResetPowerSlideMeter();
+
+    }
+    private void ResetHalfFatness()
+    {
+        float extraFat = _currentFatness - 1f;         // Extra fatness above the base
+        extraFat /= 2f;                                // Reduce the extra by half
+        _currentFatness = 1f + extraFat;               // New fatness
+        transform.localScale = Vector3.one * _currentFatness; // Apply new scale
+        _powerSlideMeter = _powerSlideUI.CurrentPoweSliderValue(PowerSlider)*0.5f;
+        _powerSlideUI?.UpdatePowerSlider(_powerSlideMeter, PowerSlider);
+        Debug.Log("_currentFatness on vain  = " + _currentFatness + " , transform.localScale - "+ transform.localScale);
+        StartCoroutine(ResetVainTrigger());
+    }
+    IEnumerator ResetVainTrigger()
+    {
+        yield return new WaitForSeconds(2f);
+        isVainActive = false;
+
     }
 
     private void FillPowerSlide()
@@ -183,7 +215,6 @@ public class PlayerController : MonoBehaviour
         }
 
         ResetFatness();
-        ResetPowerSlideMeter();
     }
 
     public void OnPowerSlideButtonPressed()
@@ -200,7 +231,7 @@ public class PlayerController : MonoBehaviour
     private void ShowRevivePopup()
     {
         isPause = true;
-        _animator.SetPuaseAnimator(0);
+       // _animator.SetPuaseAnimator(0);
 
         RevivePanel.GetComponent<Animation>().Play("Window-In");
         ContinueButton.onClick.AddListener(OnContinueClicked);
@@ -291,17 +322,43 @@ public class PlayerController : MonoBehaviour
     private void GameOver()
     {
         _animator.PlayDeath(); // Make sure Animator has "Die" trigger
-
+        StartCoroutine(WaitForShowGameover());
         Debug.Log("Game Over - implement scene change or restart here.");
+    }
+    IEnumerator WaitForShowGameover()
+    {
+
+        yield return new WaitForSeconds(1f);
+
         GameOverPanel.GetComponent<Animation>().Play("Game-Over-In");
+
     }
     public void OnJump()
     {
-        if (_jumper.IsGrounded())
-        {
-            _audioPlayer?.PlaySound(jumpSound);
-            _jumper.Jump();
-            _inputHandler.ResetJumpFlag();
-        }
+        //_jumper = new PlayerJumper(_rb, GetComponent<Animator>(), transform, groundLayer);
+
+        //if (_jumper != null)
+        //{
+        Debug.Log("_jumper 111 " +_jumper.IsGrounded());
+
+            if (_jumper.IsGrounded())
+            {
+
+                _audioPlayer?.PlaySound(jumpSound);
+                _jumper.Jump();
+                _inputHandler.ResetJumpFlag();
+            }
+        //}
+        //else
+        //{
+        //    _jumper = new PlayerJumper(_rb, GetComponent<Animator>(), transform, groundLayer);
+        //    if (_jumper.IsGrounded())
+        //    {
+        //        _audioPlayer?.PlaySound(jumpSound);
+        //        _jumper.Jump();
+        //        _inputHandler.ResetJumpFlag();
+        //    }
+        //}
+       
     }
 }
