@@ -3,13 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
 {
     private MouseInputHandler _inputHandler;
     private PlayerMover _mover;
+    private PlayerEater _eater;
     private PlayerAnimator _animator;
     [SerializeField] private PlayerJumper _jumper;
     private PowerSlideUI _powerSlideUI;
@@ -75,6 +75,8 @@ public class PlayerController : MonoBehaviour
         _mover = new PlayerMover(transform);
         _animator = new PlayerAnimator(this.transform.GetChild(0).gameObject.GetComponent<Animator>());
         _jumper = new PlayerJumper(_rb, transform.GetChild(0).GetComponent<Animator>(), transform, groundLayer);
+        _eater = new PlayerEater(transform, transform.GetChild(0).GetComponent<Animator>());
+
         isGrounded = _jumper.IsGrounded();
         _powerSlideUI = new PowerSlideUI();
         _audioPlayer = GetComponent<IAudioPlayer>();
@@ -128,6 +130,8 @@ public class PlayerController : MonoBehaviour
             _animator.UpdateAnimation(isMoving, true);
             if (worm is PoisonousWorm)
             {
+                _eater.PlayEatAnimation();
+
                 _playerHealth.EatPoisonousWorm();
             }
             else if (worm is Vain)
@@ -143,6 +147,8 @@ public class PlayerController : MonoBehaviour
             }
             else
             {
+                _eater.PlayEatAnimation();
+
                 GrowFat();
                 FillPowerSlide();
             }
@@ -151,6 +157,8 @@ public class PlayerController : MonoBehaviour
 
     private void GrowFat()
     {
+       // _animator.SetTrigger("Jump");
+
         if (_currentFatness < _maxFatness)
         {
             _currentFatness += _fatnessStep;
