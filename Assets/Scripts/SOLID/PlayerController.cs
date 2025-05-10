@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,8 +9,9 @@ public class PlayerController : MonoBehaviour
 {
     private MouseInputHandler _inputHandler;
     private PlayerMover _mover;
+    private PlayerEater _eater;
     private PlayerAnimator _animator;
-    private PlayerJumper _jumper;
+    [SerializeField] private PlayerJumper _jumper;
     private PowerSlideUI _powerSlideUI;
     private IAudioPlayer _audioPlayer;
 
@@ -40,24 +42,42 @@ public class PlayerController : MonoBehaviour
     [Header("Revive UI")]
     public GameObject RevivePanel;
     public Text CountdownText;
+    public Slider ReviveSlider;
     public Button ContinueButton;
     public Button NoThanksButton;
 
     private Coroutine _reviveCoroutine;
     private bool _isReviving = false;
+    public bool isGrounded;
 
     [Header("Gameover UI")]
     public GameObject GameOverPanel;
 
     private Rigidbody _rb;
 
+    public bool isPause;
+
+    public static Action onReviveGame;
+    private void OnEnable()
+    {
+        onReviveGame += ResetGameOnRevive;   
+    }
+    private void OnDisable()
+    {
+        onReviveGame -= ResetGameOnRevive;
+
+    }
+
     private void Awake()
     {
         _inputHandler = new MouseInputHandler();
         _rb = GetComponent<Rigidbody>();
         _mover = new PlayerMover(transform);
-        _animator = new PlayerAnimator(GetComponent<Animator>());
-        _jumper = new PlayerJumper(_rb, GetComponent<Animator>(), transform, groundLayer);
+        _animator = new PlayerAnimator(this.transform.GetChild(0).gameObject.GetComponent<Animator>());
+        _jumper = new PlayerJumper(_rb, transform.GetChild(0).GetComponent<Animator>(), transform, groundLayer);
+        _eater = new PlayerEater(transform, transform.GetChild(0).GetComponent<Animator>());
+
+        isGrounded = _jumper.IsGrounded();
         _powerSlideUI = new PowerSlideUI();
         _audioPlayer = GetComponent<IAudioPlayer>();
         PowerButton.gameObject.SetActive(false);
@@ -79,12 +99,12 @@ public class PlayerController : MonoBehaviour
         _mover.Move(direction);
         _animator.UpdateAnimation(isMoving, false);
 
-        if (_inputHandler.JumpRequested && _jumper.IsGrounded())
-        {
-            _audioPlayer?.PlaySound(jumpSound);
-            _jumper.Jump(direction);
-            _inputHandler.ResetJumpFlag();
-        }
+        //if (_inputHandler.JumpRequested && _jumper.IsGrounded())
+        //{
+        //    _audioPlayer?.PlaySound(jumpSound);
+        //    _jumper.Jump(direction);
+        //    _inputHandler.ResetJumpFlag();
+        //}
 
         if (_powerSlideMeter >= _powerSlideFullThreshold)
         {
@@ -97,7 +117,7 @@ public class PlayerController : MonoBehaviour
             _inputHandler.ResetPowerSlideFlag();
         }
     }
-
+    public bool isVainActive;
     private void OnTriggerEnter(Collider other)
     {
         bool isMoving = _inputHandler.IsMoving();
@@ -110,10 +130,25 @@ public class PlayerController : MonoBehaviour
             _animator.UpdateAnimation(isMoving, true);
             if (worm is PoisonousWorm)
             {
+                _eater.PlayEatAnimation();
+
                 _playerHealth.EatPoisonousWorm();
+            }
+            else if (worm is Vain)
+            {
+                if (isVainActive == false)
+                {
+                    if(_currentFatness>1)
+                    ResetHalfFatness();
+
+                }
+
+
             }
             else
             {
+                _eater.PlayEatAnimation();
+
                 GrowFat();
                 FillPowerSlide();
             }
@@ -122,6 +157,8 @@ public class PlayerController : MonoBehaviour
 
     private void GrowFat()
     {
+       // _animator.SetTrigger("Jump");
+
         if (_currentFatness < _maxFatness)
         {
             _currentFatness += _fatnessStep;
@@ -133,6 +170,25 @@ public class PlayerController : MonoBehaviour
     {
         _currentFatness = 1f;
         transform.localScale = Vector3.one;
+        ResetPowerSlideMeter();
+
+    }
+    private void ResetHalfFatness()
+    {
+        float extraFat = _currentFatness - 1f;         // Extra fatness above the base
+        extraFat /= 2f;                                // Reduce the extra by half
+        _currentFatness = 1f + extraFat;               // New fatness
+        transform.localScale = Vector3.one * _currentFatness; // Apply new scale
+        _powerSlideMeter = _powerSlideUI.CurrentPoweSliderValue(PowerSlider)*0.5f;
+        _powerSlideUI?.UpdatePowerSlider(_powerSlideMeter, PowerSlider);
+        Debug.Log("_currentFatness on vain  = " + _currentFatness + " , transform.localScale - "+ transform.localScale);
+        StartCoroutine(ResetVainTrigger());
+    }
+    IEnumerator ResetVainTrigger()
+    {
+        yield return new WaitForSeconds(2f);
+        isVainActive = false;
+
     }
 
     private void FillPowerSlide()
@@ -167,7 +223,6 @@ public class PlayerController : MonoBehaviour
         }
 
         ResetFatness();
-        ResetPowerSlideMeter();
     }
 
     public void OnPowerSlideButtonPressed()
@@ -183,7 +238,8 @@ public class PlayerController : MonoBehaviour
 
     private void ShowRevivePopup()
     {
-        _animator.SetPuaseAnimator(0);
+        isPause = true;
+       // _animator.SetPuaseAnimator(0);
 
         RevivePanel.GetComponent<Animation>().Play("Window-In");
         ContinueButton.onClick.AddListener(OnContinueClicked);
@@ -198,20 +254,49 @@ public class PlayerController : MonoBehaviour
 
         while (countdown > 0)
         {
+            // Update the countdown text.
             CountdownText.text = countdown.ToString();
-            yield return new WaitForSeconds(1f);
+
+            // Calculate the starting and ending slider values for this interval.
+            float startValue = (float)countdown / 5f;
+            float endValue = (float)(countdown - 1) / 5f;
+            float elapsed = 0f;
+            float duration = 1f; // Duration for each countdown step.
+
+            // Smoothly interpolate the slider from startValue to endValue over "duration".
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                ReviveSlider.value = Mathf.Lerp(startValue, endValue, elapsed / duration);
+                yield return null; // Wait for the next frame.
+            }
+
             countdown--;
         }
+
+        // Ensure that the slider and text update to their final state.
+        CountdownText.text = "0";
+        ReviveSlider.value = 0f;
 
         if (_isReviving)
         {
             OnNoThanksClicked();
+            AnalyticsManager.Instance.SendEvent_PlayerDie();
         }
     }
 
+
     private void OnContinueClicked()
     {
+        AnalyticsManager.Instance.SendEvent_PlayerRevive();
+
+        GoogleMobileAdsScript.Instance.ShowRewardBasedVideoForCoin();
+    }
+
+    private void ResetGameOnRevive()
+    {
         _animator.SetPuaseAnimator(1);
+        isPause = false;
 
         _isReviving = false;
         if (_reviveCoroutine != null) StopCoroutine(_reviveCoroutine);
@@ -226,9 +311,9 @@ public class PlayerController : MonoBehaviour
         ResetFatness();
         _animator.UpdateAnimation(false, false); // Idle again
     }
-
     private void OnNoThanksClicked()
     {
+
         _animator.PlayDeath(); // Make sure Animator has "Die" trigger
 
         _isReviving = false;
@@ -245,8 +330,43 @@ public class PlayerController : MonoBehaviour
     private void GameOver()
     {
         _animator.PlayDeath(); // Make sure Animator has "Die" trigger
-
+        StartCoroutine(WaitForShowGameover());
         Debug.Log("Game Over - implement scene change or restart here.");
+    }
+    IEnumerator WaitForShowGameover()
+    {
+
+        yield return new WaitForSeconds(1f);
+
         GameOverPanel.GetComponent<Animation>().Play("Game-Over-In");
+
+    }
+    public void OnJump()
+    {
+        //_jumper = new PlayerJumper(_rb, GetComponent<Animator>(), transform, groundLayer);
+
+        //if (_jumper != null)
+        //{
+        Debug.Log("_jumper 111 " +_jumper.IsGrounded());
+
+            if (_jumper.IsGrounded())
+            {
+
+                _audioPlayer?.PlaySound(jumpSound);
+                _jumper.Jump();
+                _inputHandler.ResetJumpFlag();
+            }
+        //}
+        //else
+        //{
+        //    _jumper = new PlayerJumper(_rb, GetComponent<Animator>(), transform, groundLayer);
+        //    if (_jumper.IsGrounded())
+        //    {
+        //        _audioPlayer?.PlaySound(jumpSound);
+        //        _jumper.Jump();
+        //        _inputHandler.ResetJumpFlag();
+        //    }
+        //}
+       
     }
 }

@@ -34,7 +34,7 @@ public class PlayerMover
 
     private void RotateTowardsDirection(Vector3 direction)
     {
-        float targetY = direction.x < 0 ? -145f : 145f;
+        float targetY = direction.x < 0 ? -110f : 110f;
         _playerTransform.rotation = Quaternion.Euler(0, targetY, 0);
     }
 }

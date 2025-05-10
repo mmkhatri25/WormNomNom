@@ -14,6 +14,7 @@ public class PlayerJumper
 
     public PlayerJumper(Rigidbody rb, Animator animator, Transform transform, LayerMask groundLayer)
     {
+        Debug.Log("Jumper name "+ transform.gameObject.name);
         _rigidbody = rb;
         _animator = animator;
         _transform = transform;
@@ -31,8 +32,9 @@ public class PlayerJumper
         return false;
     }
 
-    public void Jump(Vector3 direction)
+    public void Jump()
     {
+        Debug.Log("_isJumping = "+ _isJumping);
         if (_isJumping) return;
         _isJumping = true;
 
@@ -42,7 +44,9 @@ public class PlayerJumper
         // Apply horizontal and vertical jump force
         Vector3 jumpVelocity = new Vector3(0, _jumpForce, 0);
         _rigidbody.AddForce(jumpVelocity, ForceMode.Impulse);
-        _animator.Play("Jump");
+        //_animator.Play("Jump");
+        _animator.SetTrigger("Jump");
+
 
     }
 }
