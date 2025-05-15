@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.TextCore.Text;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -21,11 +23,13 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private JumpSettings jumpSettings;
     public Slider PowerSlider;
     public Button PowerButton;
-    public AudioClip jumpSound, eatSound, powerSound;
+    public AudioClip jumpSound, eatSound, powerSound, chickenPain;
 
     [Header("Health System")]
     public GameObject leftEye;
     public GameObject rightEye;
+    private GameObject _deathParticle;
+
     public Slider HealthSlider;
 
     private PlayerHealth _playerHealth;
@@ -58,6 +62,11 @@ public class PlayerController : MonoBehaviour
     public bool isPause;
 
     public static Action onReviveGame;
+
+
+    [Header("Characters")]
+    public List<GameObject> Characters;
+    public GameObject ActiveCharacter;
     private void OnEnable()
     {
         onReviveGame += ResetGameOnRevive;   
@@ -70,23 +79,60 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
+        foreach (var item in Characters)
+        {
+            item.SetActive(false);
+        }
+        Debug.Log("CurrentCharacter " + PlayerPrefs.GetInt("CurrentCharacter"));
+
+        switch (PlayerPrefs.GetInt("CurrentCharacter"))
+        {
+            case 0:
+                ActiveCharacter = Characters[0];
+                ActiveCharacter.SetActive(true);
+                break;
+            case 1:
+                ActiveCharacter = Characters[1];
+                ActiveCharacter.SetActive(true);
+                break;
+            case 2:
+                ActiveCharacter = Characters[2];
+                ActiveCharacter.SetActive(true);
+                break;
+            default:
+                ActiveCharacter = Characters[0];
+                ActiveCharacter.SetActive(true);
+                break;
+        }
+
+
         _inputHandler = new MouseInputHandler();
         _rb = GetComponent<Rigidbody>();
         _mover = new PlayerMover(transform);
-        _animator = new PlayerAnimator(this.transform.GetChild(0).gameObject.GetComponent<Animator>());
-        _jumper = new PlayerJumper(_rb, transform.GetChild(0).GetComponent<Animator>(), transform, groundLayer);
-        _eater = new PlayerEater(transform, transform.GetChild(0).GetComponent<Animator>());
+        _animator = new PlayerAnimator(ActiveCharacter.gameObject.GetComponent<Animator>());
+        _jumper = new PlayerJumper(_rb, ActiveCharacter.GetComponent<Animator>(), transform, groundLayer);
+        _eater = new PlayerEater(transform, ActiveCharacter.GetComponent<Animator>());
 
         isGrounded = _jumper.IsGrounded();
         _powerSlideUI = new PowerSlideUI();
         _audioPlayer = GetComponent<IAudioPlayer>();
         PowerButton.gameObject.SetActive(false);
 
+        leftEye = ActiveCharacter.transform.GetChild(0).gameObject;
+        rightEye = ActiveCharacter.transform.GetChild(1).gameObject;
+        _deathParticle = ActiveCharacter.transform.GetChild(2).gameObject;
+
         _playerHealth = new PlayerHealth();
-        _playerUI = new PlayerUI(HealthSlider, leftEye, rightEye, _playerHealth.Max);
+        _playerUI = new PlayerUI(HealthSlider, leftEye, rightEye, _playerHealth.Max, this);
 
         _playerHealth.OnHealthChanged += _playerUI.UpdateHealth;
         _playerHealth.OnDeath += ShowDeath;
+
+       
+    }
+    private void Start()
+    {
+        
     }
 
     private void Update()
@@ -131,8 +177,9 @@ public class PlayerController : MonoBehaviour
             if (worm is PoisonousWorm)
             {
                 _eater.PlayEatAnimation();
-
                 _playerHealth.EatPoisonousWorm();
+                _audioPlayer?.PlaySound(chickenPain);
+
             }
             else if (worm is Vain)
             {
@@ -329,6 +376,7 @@ public class PlayerController : MonoBehaviour
 
     private void GameOver()
     {
+        _deathParticle.SetActive(true);
         _animator.PlayDeath(); // Make sure Animator has "Die" trigger
         StartCoroutine(WaitForShowGameover());
         Debug.Log("Game Over - implement scene change or restart here.");

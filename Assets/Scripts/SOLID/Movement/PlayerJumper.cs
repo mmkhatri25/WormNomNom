@@ -23,14 +23,21 @@ public class PlayerJumper
 
     public bool IsGrounded()
     {
-        Ray ray = new Ray(_transform.position, Vector3.down);
-        if (Physics.Raycast(ray, _groundCheckDistance, _groundLayer))
+        // Move ray origin to feet level
+        Vector3 rayOrigin = _transform.position + Vector3.down * 1.0f; // Assuming character height ≈ 2 units
+        float rayDistance = _groundCheckDistance;
+
+        Ray ray = new Ray(rayOrigin, Vector3.down);
+        Debug.DrawRay(ray.origin, ray.direction * 5f, Color.blue);
+
+        if (Physics.Raycast(ray, rayDistance, _groundLayer))
         {
             _isJumping = false;
             return true;
         }
         return false;
     }
+
 
     public void Jump()
     {

@@ -57,20 +57,22 @@ public class Garage : MonoBehaviour
         Part part = partItems[partIndex].GetComponent<Part>();
         
         // Check if player has enough money to buy a part.
-        if(Wallet.GetAmount() >= part.price)
+        //if(Wallet.GetAmount() >= part.price)
         {
             // Save bought part value.
-            PlayerPrefs.SetInt("PartBought-" + partItems[partIndex].name, 1);
-            // Loas add/remove button.
-            LoadButton();
+            //PlayerPrefs.SetInt("PartBought-" + partItems[partIndex].name, 1);
+            PlayerPrefs.SetInt("CurrentCharacter", partIndex);
+                Debug.Log("partIndex "+ partIndex);
+                // Loas add/remove button.
+                LoadButton();
             // Subract part price from player wallet.
             Wallet.SetAmount(Wallet.GetAmount() - part.price);
         }
-        else
-        {
-            //Play not enough money animation.
-            notEnough.Play("Not-Enough-In");
-        }
+        //else
+        //{
+        //    //Play not enough money animation.
+        //    notEnough.Play("Not-Enough-In");
+        //}
     }
 
     // When player press add button.
