@@ -10,6 +10,7 @@ TagManager:
   - Vain
   - Eye1
   - Eye2
+  - Mouth
   layers:
   - Default
   - TransparentFX

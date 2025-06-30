@@ -17,7 +17,7 @@ public class Vain : MonoBehaviour, IWorm
         _audioPlayer = GetComponent<IAudioPlayer>();
     }
 
-    public void Eat()
+    public void Eat(GameObject warm)
     {
         // Play the destroy animation
         if (_animator != null)

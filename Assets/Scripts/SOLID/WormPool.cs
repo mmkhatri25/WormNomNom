@@ -13,7 +13,7 @@ public class WormPool : MonoBehaviour
     private Queue<GameObject> vainPool = new Queue<GameObject>();
 
     public static WormPool Instance { get; private set; }
-
+    public Texture2D[] wormTextures;
     private void Awake()
     {
         if (Instance == null)
@@ -27,8 +27,21 @@ public class WormPool : MonoBehaviour
         for (int i = 0; i < poolSize; i++)
         {
             GameObject worm = Instantiate(normalWormPrefab);
+            int randomIndex = Random.Range(0, wormTextures.Length);
+            Renderer wormRenderer = worm.GetComponentInChildren<Renderer>();
+            if (wormRenderer != null)
+            {
+                wormRenderer.material.mainTexture = wormTextures[randomIndex];
+            }
             worm.SetActive(false);
             normalWormPool.Enqueue(worm);
+        }
+
+        for (int i = 0; i < poolSize; i++)
+        {
+            //GameObject worm = Instantiate(normalWormPrefab);
+            //worm.SetActive(false);
+            //normalWormPool.Enqueue(worm);
 
             GameObject poisonousWorm = Instantiate(poisonousWormPrefab);
             poisonousWorm.SetActive(false);

@@ -1,7 +1,9 @@
+using UnityEngine;
+
 public class PlayerHealth
 {
     private int _poisonWormsEaten = 0;
-    private const int MaxHealth = 4;
+    private const int MaxHealth = 5;
 
     public int CurrentHealth => MaxHealth - _poisonWormsEaten;
     public int Max => MaxHealth;
@@ -12,7 +14,8 @@ public class PlayerHealth
     public void EatPoisonousWorm()
     {
         _poisonWormsEaten++;
-        OnHealthChanged?.Invoke(CurrentHealth);
+        OnHealthChanged?.Invoke(MaxHealth - _poisonWormsEaten);
+        Debug.Log("_poisonWormsEaten - "+ _poisonWormsEaten +" final health" + (MaxHealth - _poisonWormsEaten));
 
         if (_poisonWormsEaten >= MaxHealth)
         {

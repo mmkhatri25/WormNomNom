@@ -53,7 +53,7 @@ public class PlayerJumper
         _rigidbody.AddForce(jumpVelocity, ForceMode.Impulse);
         //_animator.Play("Jump");
         _animator.SetTrigger("Jump");
-
+        _isJumping = false;
 
     }
 }

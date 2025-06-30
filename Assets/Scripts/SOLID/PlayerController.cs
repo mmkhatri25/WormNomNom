@@ -5,6 +5,8 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.TextCore.Text;
 using UnityEngine.UI;
+using static UnityEngine.Rendering.DebugUI;
+//using UnityEngine.UIElements;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
@@ -21,20 +23,25 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private LayerMask wormLayer;
     [SerializeField] private JumpSettings jumpSettings;
-    public Slider PowerSlider;
-    public Button PowerButton;
+    public Image PowerSlider;
+    public UnityEngine.UI.Button PowerButton;
+    public Image PowerHighlightImage;
     public AudioClip jumpSound, eatSound, powerSound, chickenPain;
 
     [Header("Health System")]
     public GameObject leftEye;
     public GameObject rightEye;
+    public GameObject Mouth;
     private GameObject _deathParticle;
 
     public Slider HealthSlider;
+    public List<GameObject> healths;
 
     private PlayerHealth _playerHealth;
     private PlayerUI _playerUI;
 
+    public float _currentHealth;
+    public float _maxHealth;
     private float _currentFatness = 1f;
     private readonly float _maxFatness = 2.5f;
     private readonly float _fatnessStep = 0.1f;
@@ -47,8 +54,8 @@ public class PlayerController : MonoBehaviour
     public GameObject RevivePanel;
     public Text CountdownText;
     public Slider ReviveSlider;
-    public Button ContinueButton;
-    public Button NoThanksButton;
+    public UnityEngine.UI.Button ContinueButton;
+    public UnityEngine.UI.Button NoThanksButton;
 
     private Coroutine _reviveCoroutine;
     private bool _isReviving = false;
@@ -67,6 +74,7 @@ public class PlayerController : MonoBehaviour
     [Header("Characters")]
     public List<GameObject> Characters;
     public GameObject ActiveCharacter;
+
     private void OnEnable()
     {
         onReviveGame += ResetGameOnRevive;   
@@ -116,20 +124,43 @@ public class PlayerController : MonoBehaviour
         isGrounded = _jumper.IsGrounded();
         _powerSlideUI = new PowerSlideUI();
         _audioPlayer = GetComponent<IAudioPlayer>();
-        PowerButton.gameObject.SetActive(false);
+        //PowerButton.gameObject.SetActive(false);
+        PowerButton.interactable = false;
+        StartCoroutine(RotateImage(false));
 
-        leftEye = ActiveCharacter.transform.GetChild(0).gameObject;
-        rightEye = ActiveCharacter.transform.GetChild(1).gameObject;
+        leftEye = GetChildGameObjectWithTag(ActiveCharacter.transform, "Eye1");
+        rightEye = GetChildGameObjectWithTag(ActiveCharacter.transform, "Eye2");
+        Mouth  = GetChildGameObjectWithTag(ActiveCharacter.transform, "Mouth");
+
         _deathParticle = ActiveCharacter.transform.GetChild(2).gameObject;
+      
 
-        _playerHealth = new PlayerHealth();
-        _playerUI = new PlayerUI(HealthSlider, leftEye, rightEye, _playerHealth.Max, this);
+        //_playerHealth = new PlayerHealth();
+        //_playerUI = new PlayerUI(HealthSlider, leftEye, rightEye, _playerHealth.Max, this, healths);
 
-        _playerHealth.OnHealthChanged += _playerUI.UpdateHealth;
-        _playerHealth.OnDeath += ShowDeath;
+        //_playerHealth.OnHealthChanged += _playerUI.UpdateHealth;
+        //_playerHealth.OnDeath += ShowDeath;
 
-       
+
     }
+    GameObject GetChildGameObjectWithTag(Transform parent, string tag)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.CompareTag(tag))
+            {
+                return child.gameObject;
+            }
+
+            GameObject result = GetChildGameObjectWithTag(child, tag); // recurse
+            if (result != null)
+            {
+                return result;
+            }
+        }
+        return null;
+    }
+
     private void Start()
     {
         
@@ -152,14 +183,17 @@ public class PlayerController : MonoBehaviour
         //    _inputHandler.ResetJumpFlag();
         //}
 
-        if (_powerSlideMeter >= _powerSlideFullThreshold)
+        if (PowerSlider.fillAmount >= _powerSlideFullThreshold)
         {
-            PowerButton.gameObject.SetActive(true);
+            //PowerButton.gameObject.SetActive(true);
+            PowerButton.interactable = true;
+            StartCoroutine(RotateImage(true));
+
         }
 
         if (_inputHandler.PowerSlideRequested)
         {
-            StartCoroutine( ActivatePowerSlide());
+            StartCoroutine(ActivatePowerSlide());
             _inputHandler.ResetPowerSlideFlag();
         }
     }
@@ -171,14 +205,18 @@ public class PlayerController : MonoBehaviour
         IWorm worm = other.GetComponent<IWorm>();
         if (worm != null)
         {
-            worm.Eat();
+            worm.Eat(Mouth);
             _audioPlayer?.PlaySound(eatSound);
             _animator.UpdateAnimation(isMoving, true);
             if (worm is PoisonousWorm)
             {
+                _currentHealth--;
+                UpdateHealth(_currentHealth);
                 _eater.PlayEatAnimation();
-                _playerHealth.EatPoisonousWorm();
+                //_playerHealth.EatPoisonousWorm();
                 _audioPlayer?.PlaySound(chickenPain);
+
+                
 
             }
             else if (worm is Vain)
@@ -189,8 +227,6 @@ public class PlayerController : MonoBehaviour
                     ResetHalfFatness();
 
                 }
-
-
             }
             else
             {
@@ -199,6 +235,41 @@ public class PlayerController : MonoBehaviour
                 GrowFat();
                 FillPowerSlide();
             }
+        }
+    }
+
+    public void UpdateHealth(float currentHealth)
+    {
+        Debug.Log("UpdateHealth on " + currentHealth);
+        HealthSlider.value = currentHealth;
+        foreach (var item in healths)
+        {
+            item.SetActive(false);
+        }
+        for (int i = 0; i < currentHealth; i++)
+        {
+            healths[i].SetActive(true);
+        }
+
+        // Left eye logic: enable once at health == 2
+        if (currentHealth == 2 && !leftEye.activeSelf)
+        {
+            leftEye.SetActive(true);
+            //_leftEye.transform.DOPunchScale(new Vector3(1.010707f, 1.010707f, 1.010707f), 0.2f);
+
+        }
+
+        // Right eye logic: enable once at health == 1
+        if (currentHealth == 1 && !rightEye.activeSelf)
+        {
+            rightEye.SetActive(true);
+            // _rightEye.transform.DOPunchScale(new Vector3(0.010707f, 0.010707f, 0.010707f), 0.5f);
+        }
+        if (_currentHealth <= 0)
+        {
+            //OnDeath?.Invoke();
+            ShowDeath();
+            _currentHealth = 5f;
         }
     }
 
@@ -226,8 +297,10 @@ public class PlayerController : MonoBehaviour
         extraFat /= 2f;                                // Reduce the extra by half
         _currentFatness = 1f + extraFat;               // New fatness
         transform.localScale = Vector3.one * _currentFatness; // Apply new scale
-        _powerSlideMeter = _powerSlideUI.CurrentPoweSliderValue(PowerSlider)*0.5f;
-        _powerSlideUI?.UpdatePowerSlider(_powerSlideMeter, PowerSlider);
+        //_powerSlideMeter = _powerSlideUI.CurrentPoweSliderValue(PowerSlider)*0.5f;
+        //_powerSlideUI?.UpdatePowerSlider(_powerSlideMeter, PowerSlider);
+        PowerSlider.fillAmount += PowerSlider.fillAmount*0.5f;
+
         Debug.Log("_currentFatness on vain  = " + _currentFatness + " , transform.localScale - "+ transform.localScale);
         StartCoroutine(ResetVainTrigger());
     }
@@ -240,21 +313,46 @@ public class PlayerController : MonoBehaviour
 
     private void FillPowerSlide()
     {
-        _powerSlideMeter += _powerSlideFillPerWorm;
-        _powerSlideMeter = Mathf.Clamp01(_powerSlideMeter);
-        _powerSlideUI?.UpdatePowerSlider(_powerSlideMeter, PowerSlider);
+        //_powerSlideMeter += _powerSlideFillPerWorm;
+        PowerSlider.fillAmount += _powerSlideFillPerWorm;
+        //_powerSlideMeter = Mathf.Clamp01(_powerSlideMeter);
+        //_powerSlideUI?.UpdatePowerSlider(_powerSlideMeter, PowerSlider);
+
+        //slider.value = Mathf.Clamp01(value);
     }
 
     private void ResetPowerSlideMeter()
     {
         _powerSlideMeter = 0f;
-        _powerSlideUI?.UpdatePowerSlider(_powerSlideMeter, PowerSlider);
-        PowerButton.gameObject.SetActive(false);
-    }
+        PowerSlider.fillAmount = _powerSlideMeter;
 
+        //_powerSlideUI?.UpdatePowerSlider(_powerSlideMeter, PowerSlider);
+        //PowerButton.gameObject.SetActive(false);
+        PowerButton.interactable = false;
+        StartCoroutine(RotateImage(false));
+    }
+    float rotationDuration = 1f;
+    private IEnumerator RotateImage(bool active)
+    {
+        float elapsed = 0f;
+        float startRotation = PowerSlider.rectTransform.eulerAngles.z;
+        float endRotation = startRotation + 360f;
+
+        while (elapsed < rotationDuration)
+        {
+            elapsed += Time.deltaTime;
+            float zRotation = Mathf.Lerp(startRotation, endRotation, elapsed / rotationDuration);
+            PowerSlider.rectTransform.rotation = Quaternion.Euler(0, 0, zRotation);
+            yield return null;
+        }
+
+        PowerSlider.rectTransform.rotation = Quaternion.Euler(0, 0, endRotation);
+    }
     IEnumerator ActivatePowerSlide()
     {
         _audioPlayer?.PlaySound(powerSound);
+        ResetFatness();
+
         yield return new WaitForSeconds(2f);
         var normalWorms = GameObject.FindGameObjectsWithTag("Worm");
         var poisonWorms = GameObject.FindGameObjectsWithTag("PoisonousWorm");
@@ -269,7 +367,6 @@ public class PlayerController : MonoBehaviour
             w?.Eat();
         }
 
-        ResetFatness();
     }
 
     public void OnPowerSlideButtonPressed()
@@ -336,12 +433,18 @@ public class PlayerController : MonoBehaviour
     private void OnContinueClicked()
     {
         AnalyticsManager.Instance.SendEvent_PlayerRevive();
+        foreach (var item in healths)
+        {
+            item.SetActive(true);
+        }
 
         GoogleMobileAdsScript.Instance.ShowRewardBasedVideoForCoin();
     }
 
     private void ResetGameOnRevive()
     {
+        ResetFatness();
+
         _animator.SetPuaseAnimator(1);
         isPause = false;
 
@@ -353,9 +456,10 @@ public class PlayerController : MonoBehaviour
         ContinueButton.onClick.RemoveListener(OnContinueClicked);
         NoThanksButton.onClick.RemoveListener(OnNoThanksClicked);
 
-        _playerHealth.Reset();
-        _playerUI.UpdateHealth(_playerHealth.Max);
-        ResetFatness();
+        //_playerHealth.Reset();
+        //_playerUI.UpdateHealth(_playerHealth.Max);
+        leftEye.gameObject.SetActive(false);
+        rightEye.gameObject.SetActive(false);
         _animator.UpdateAnimation(false, false); // Idle again
     }
     private void OnNoThanksClicked()
@@ -397,13 +501,13 @@ public class PlayerController : MonoBehaviour
         //{
         Debug.Log("_jumper 111 " +_jumper.IsGrounded());
 
-            if (_jumper.IsGrounded())
-            {
+            //if (_jumper.IsGrounded())
+            //{
 
                 _audioPlayer?.PlaySound(jumpSound);
                 _jumper.Jump();
                 _inputHandler.ResetJumpFlag();
-            }
+            //}
         //}
         //else
         //{
