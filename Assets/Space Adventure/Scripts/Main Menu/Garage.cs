@@ -17,6 +17,19 @@ public class CharacterSelector : MonoBehaviour
 
     void Start()
     {
+        // Unlock the first character by default
+        string firstKey = "PartBought-" + partItems[0].name;
+        if (PlayerPrefs.GetInt(firstKey, 0) != 1)
+        {
+            PlayerPrefs.SetInt(firstKey, 1); // Mark first character as bought
+        }
+
+        // If no character is selected, default to the first one
+        if (!PlayerPrefs.HasKey("CurrentCharacter"))
+        {
+            PlayerPrefs.SetInt("CurrentCharacter", 0);
+        }
+
         partIndex = PlayerPrefs.GetInt("CurrentCharacter", 0);
         LoadPart();
     }
@@ -49,11 +62,12 @@ public class CharacterSelector : MonoBehaviour
         if (!isBought)
         {
             int balance = Wallet.GetAmount();
-            if (balance >= price) // Fixed the balance comparison
+            if (balance >= price)
             {
                 Wallet.SetAmount(balance - price);
                 PlayerPrefs.SetInt(key, 1); // Mark as bought
-                UpdateButtonState();        // Now show "Select"
+                PlayerPrefs.SetInt("CurrentCharacter", partIndex); // Set as selected
+                UpdateButtonState();
             }
             else
             {
@@ -95,7 +109,7 @@ public class CharacterSelector : MonoBehaviour
 
         if (!isBought)
         {
-            buyButtonText.text = $"Buy - {price}";
+            buyButtonText.text = $"{price}";
         }
         else if (partIndex == currentCharacter)
         {

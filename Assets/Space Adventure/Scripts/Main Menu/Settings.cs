@@ -116,5 +116,9 @@ public class Settings : MonoBehaviour
             vibrationImage.sprite = vibrationOff;
         }
     }
+        public void gotoWebsite()
+        {
+            Application.OpenURL("https://e2agames.com/worm-nom-nom");
+        }
 }
 }

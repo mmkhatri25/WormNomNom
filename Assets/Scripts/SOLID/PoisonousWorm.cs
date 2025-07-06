@@ -31,12 +31,12 @@ public class PoisonousWorm : MonoBehaviour, IWorm
     private void StartShiverEffect()
     {
         // Ensure starting at correct base rotation
-        transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+        transform.rotation = Quaternion.Euler(0f, 180f, 180f);
 
         // Small rotation back and forth on Z axis to simulate shiver
-        shiverTween = transform.DORotate(new Vector3(0f, 180f, 5f), 0.1f)
-            .SetEase(Ease.InOutSine)
-            .SetLoops(-1, LoopType.Yoyo);
+        //shiverTween = transform.DORotate(new Vector3(0f, 180f, 5f), 0.1f)
+            //.SetEase(Ease.InOutSine)
+            //.SetLoops(-1, LoopType.Yoyo);
     }
 
     private void StopShiverEffect()
