@@ -52,12 +52,61 @@ public class WormPool : MonoBehaviour
             vainPool.Enqueue(vain);
         }
     }
-
+    [Range(0f, 1f)] public float normalWormProbability = 0.7f;
+    [Range(0f, 1f)] public float poisonousWormProbability = 0.2f;
+    [Range(0f, 1f)] public float vainProbability = 0.1f;
     public GameObject GetWorm()
     {
-        float rand = Random.value; // 0.0 to 1.0
+        //float rand = Random.value; // 0.0 to 1.0
 
-        if (rand < 0.5f) // 0.0 - 0.5 (50%)
+        //if (rand < 0.5f) // 0.0 - 0.5 (50%)
+        //{
+        //    if (normalWormPool.Count > 0)
+        //    {
+        //        GameObject worm = normalWormPool.Dequeue();
+        //        worm.SetActive(true);
+        //        return worm;
+        //    }
+        //    else
+        //    {
+        //        return Instantiate(normalWormPrefab);
+        //    }
+        //}
+        //else if (rand < 0.8f) // 0.5 - 0.8 (30%)
+        //{
+        //    if (poisonousWormPool.Count > 0)
+        //    {
+        //        GameObject worm = poisonousWormPool.Dequeue();
+        //        worm.SetActive(true);
+        //        return worm;
+        //    }
+        //    else
+        //    {
+        //        return Instantiate(poisonousWormPrefab);
+        //    }
+        //}
+        //else //0.8 - 1.0 (20%)
+        //{
+        //    if (vainPool.Count > 0)
+        //    {
+        //        GameObject worm = vainPool.Dequeue();
+        //        worm.SetActive(true);
+        //        return worm;
+        //    }
+        //    else
+        //    {
+        //        return Instantiate(vainPrefab);
+        //    }
+        //}
+        float total = normalWormProbability + poisonousWormProbability + vainProbability;
+
+        float normNormal = normalWormProbability / total;
+        float normPoison = poisonousWormProbability / total;
+        float normVain = vainProbability / total;
+
+        float rand = Random.value;
+
+        if (rand < normNormal)
         {
             if (normalWormPool.Count > 0)
             {
@@ -70,7 +119,7 @@ public class WormPool : MonoBehaviour
                 return Instantiate(normalWormPrefab);
             }
         }
-        else if (rand < 0.8f) // 0.5 - 0.8 (30%)
+        else if (rand < normNormal + normPoison)
         {
             if (poisonousWormPool.Count > 0)
             {
@@ -83,7 +132,7 @@ public class WormPool : MonoBehaviour
                 return Instantiate(poisonousWormPrefab);
             }
         }
-        else // 0.8 - 1.0 (20%)
+        else
         {
             if (vainPool.Count > 0)
             {

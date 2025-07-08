@@ -51,13 +51,29 @@ public class FakeLeaderboard : MonoBehaviour
         // Create leaderboard UI
         for (int i = 0; i < entries.Count; i++)
         {
+            bool isYou = entries[i].name == "You";
             GameObject item = Instantiate(leaderboardItemPrefab, contentParent);
-            SetLeaderboardItem(item, i + 1, entries[i].name, entries[i].score);
+            SetLeaderboardItem(item, i + 1, entries[i].name, entries[i].score, isYou);
 
         }
     }
 
-    void SetLeaderboardItem(GameObject item, int rank, string name, int score)
+    //void SetLeaderboardItem(GameObject item, int rank, string name, int score)
+    //{
+    //    TextMeshProUGUI[] texts = item.GetComponentsInChildren<TextMeshProUGUI>();
+    //    foreach (TextMeshProUGUI t in texts)
+    //    {
+    //        string lowerName = t.name.ToLower();
+    //        if (lowerName.Contains("rank"))
+    //            t.text = rank.ToString();
+    //        else if (lowerName.Contains("name"))
+    //            t.text = name;
+    //        else if (lowerName.Contains("score"))
+    //            t.text = score.ToString();
+    //    }
+    //}
+
+    void SetLeaderboardItem(GameObject item, int rank, string name, int score, bool isYou = false)
     {
         TextMeshProUGUI[] texts = item.GetComponentsInChildren<TextMeshProUGUI>();
         foreach (TextMeshProUGUI t in texts)
@@ -69,6 +85,21 @@ public class FakeLeaderboard : MonoBehaviour
                 t.text = name;
             else if (lowerName.Contains("score"))
                 t.text = score.ToString();
+
+            if (isYou)
+            {
+                // Change font color or style
+                t.color = Color.yellow; // Or any eye-catching color
+                t.fontStyle = FontStyles.Bold;
+            }
+        }
+
+        if (isYou)
+        {
+            // Optionally change background color
+            Image bg = item.GetComponent<Image>();
+            if (bg != null)
+                bg.color = new Color(1f, 1f, 0.5f); // Light yellow background
         }
     }
 

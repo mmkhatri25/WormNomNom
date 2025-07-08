@@ -12,6 +12,7 @@ public class CharacterSelector : MonoBehaviour
     public Animation notEnoughAnimation;
     public Button nextButton;
     public Button previousButton;
+    public GameObject coinImage;
 
     private int partIndex;
 
@@ -76,7 +77,6 @@ public class CharacterSelector : MonoBehaviour
         }
         else
         {
-            // Already bought
             if (partIndex != currentCharacter)
             {
                 PlayerPrefs.SetInt("CurrentCharacter", partIndex);
@@ -110,14 +110,17 @@ public class CharacterSelector : MonoBehaviour
         if (!isBought)
         {
             buyButtonText.text = $"{price}";
+            coinImage.SetActive(true); // Show coin when price is shown
         }
         else if (partIndex == currentCharacter)
         {
             buyButtonText.text = "Selected";
+            coinImage.SetActive(false); // Hide coin when selected
         }
         else
         {
             buyButtonText.text = "Select";
+            coinImage.SetActive(false); // Hide coin when bought
         }
     }
 }

@@ -6,19 +6,18 @@ public class PoisonousWorm : MonoBehaviour, IWorm
 {
     public bool IsPoisonous => true;
     private Animator _animator;
-    private IAudioPlayer _audioPlayer;
 
-    [SerializeField] private AudioClip deathSound;
+
+    public AudioSource _audioPlayer;
     private void Awake()
     {
         _animator = GetComponent<Animator>();
-        _audioPlayer = GetComponent<IAudioPlayer>();
     }
-
     private Coroutine spinCoroutine;
 
     private void OnEnable()
     {
+
         StartShiverEffect();
         //spinCoroutine = StartCoroutine(RandomSpinRoutine());
     }
@@ -66,7 +65,8 @@ public class PoisonousWorm : MonoBehaviour, IWorm
         if (_animator != null)
         {
             _animator.Play("Death");
-            _audioPlayer?.PlaySound(deathSound);
+            
+            _audioPlayer.Play();
 
             // Start moving with effects
             StartCoroutine(FlyIntoMouth(mouth, 0.5f));
@@ -111,6 +111,8 @@ public class PoisonousWorm : MonoBehaviour, IWorm
     {
        
         yield return new WaitForSeconds(delay);
+        if (blastEffect != null)
+            blastEffect.SetActive(false);
 
         WormPool.Instance.ReturnWorm(gameObject);
     }
@@ -119,5 +121,23 @@ public class PoisonousWorm : MonoBehaviour, IWorm
     public Transform GetTransform()
     {
         return transform;
+    }
+
+    
+    public GameObject blastEffect;
+    public void Blast()
+    {
+        if (blastEffect != null)
+        {
+
+            blastEffect.SetActive(true);
+
+            Sequence squash = DOTween.Sequence();
+            squash.Append(transform.DOScale(new Vector3(0.25f, 0.15f, 1), 0.15f));
+            squash.Append(transform.DOScale(new Vector3(0.1f, 0.1f, 1), 0.35f));
+            _audioPlayer.Play();
+
+            StartCoroutine(ReturnAfterDelay(1.1f));
+        }
     }
 }

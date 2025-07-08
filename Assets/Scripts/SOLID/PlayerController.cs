@@ -7,6 +7,8 @@ using UnityEngine.TextCore.Text;
 using UnityEngine.UI;
 using static UnityEngine.Rendering.DebugUI;
 //using UnityEngine.UIElements;
+using TMPro;
+using UnityEngine.UIElements;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
@@ -23,7 +25,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private LayerMask wormLayer;
     [SerializeField] private JumpSettings jumpSettings;
 
-    public Image PowerSlider;
+    public UnityEngine.UI.Image PowerSlider;
     public UnityEngine.UI.Button PowerButton;
     public List<GameObject> healths;
 
@@ -42,8 +44,8 @@ public class PlayerController : MonoBehaviour
     public float _currentHealth;
     public float _maxHealth;
     private float _currentFatness = 1f;
-    private readonly float _maxFatness = 2.5f;
-    private readonly float _fatnessStep = 0.1f;
+    private readonly float _maxFatness = 1.5f;
+    private readonly float _fatnessStep = .2f;//0.01f;// original
 
     private float _powerSlideMeter = 0f;
     private readonly float _powerSlideFillPerWorm = 0.2f;
@@ -52,7 +54,7 @@ public class PlayerController : MonoBehaviour
     [Header("Revive UI")]
     public GameObject RevivePanel;
     public Text CountdownText;
-    public Slider ReviveSlider;
+    public UnityEngine.UI.Slider ReviveSlider;
     public UnityEngine.UI.Button ContinueButton;
     public UnityEngine.UI.Button NoThanksButton;
 
@@ -74,14 +76,23 @@ public class PlayerController : MonoBehaviour
     public List<GameObject> Characters;
     public GameObject ActiveCharacter;
 
+    public TextMeshProUGUI scoreText, highScoreText;
+    public int current_Score;
+    
+
     private void OnEnable()
     {
+       
         onReviveGame += ResetGameOnRevive;   
     }
     private void OnDisable()
     {
         onReviveGame -= ResetGameOnRevive;
 
+    }
+    private void Start()
+    {
+        highScoreText.text = "TOP :" + PlayerPrefs.GetInt("topscore");
     }
 
     private void Awake()
@@ -187,6 +198,7 @@ public class PlayerController : MonoBehaviour
         IWorm worm = other.GetComponent<IWorm>();
         if (worm != null)
         {
+            _audioPlayer?.PlaySound(eatSound);
             _eatenWorms.Add(other); // 🟢 Mark worm as eaten
 
             worm.Eat(Mouth);
@@ -214,6 +226,7 @@ public class PlayerController : MonoBehaviour
                 _eater.PlayEatAnimation();
                 GrowFat();
                 FillPowerSlide();
+                AddScore(1);
             }
 
             // 🟢 Optional: destroy worm GameObject to remove from scene
@@ -255,8 +268,11 @@ public class PlayerController : MonoBehaviour
     {
         if (_currentFatness < _maxFatness)
         {
+            //transform.localScale = Vector3.one * _currentFatness;
             _currentFatness += _fatnessStep;
-            transform.localScale = Vector3.one * _currentFatness;
+            Vector3 scale = transform.localScale;
+            scale.x = _currentFatness;
+            transform.localScale = scale;
         }
     }
 
@@ -265,6 +281,8 @@ public class PlayerController : MonoBehaviour
         _currentFatness = 1f;
         transform.localScale = Vector3.one;
         ResetPowerSlideMeter();
+        leftEye.SetActive(false);
+        rightEye.SetActive(false);
 
     }
     private void ResetHalfFatness()
@@ -273,8 +291,11 @@ public class PlayerController : MonoBehaviour
         //{
             float extraFat = _currentFatness - 1f;                         // Extra fatness above the base
             float reduction = extraFat * 0.5f;                             // 50% of the extra
-            _currentFatness -= reduction;                                 // Reduce fatness
-            transform.localScale = Vector3.one * _currentFatness;         // Apply new scale
+            _currentFatness -= reduction;
+             Vector3 scale = transform.localScale;
+             scale.x = _currentFatness;
+        // Reduce fatness
+           transform.localScale = scale;         // Apply new scale
 
             // Assuming power fill amount increases with fatness linearly
             PowerSlider.fillAmount -= reduction;                          // Reduce fill by same extra amount
@@ -294,6 +315,7 @@ public class PlayerController : MonoBehaviour
     private void FillPowerSlide()
     {
         PowerSlider.fillAmount += _powerSlideFillPerWorm;
+        //PowerSlider.fillAmount += _fatnessStep / 0.5f;
     }
 
     private void ResetPowerSlideMeter()
@@ -322,23 +344,29 @@ public class PlayerController : MonoBehaviour
     }
     IEnumerator ActivatePowerSlide()
     {
-        _audioPlayer?.PlaySound(powerSound);
-        ResetFatness();
-
+        //_audioPlayer?.PlaySound(powerSound);
+        PowerButton.interactable = false;
+        PowerSlider.fillAmount = 0;
+        isPause = true;
         yield return new WaitForSeconds(2f);
         var normalWorms = GameObject.FindGameObjectsWithTag("Worm");
         var poisonWorms = GameObject.FindGameObjectsWithTag("PoisonousWorm");
+        var vain = GameObject.FindGameObjectsWithTag("Vain");
 
         List<GameObject> allWorms = new List<GameObject>();
         allWorms.AddRange(normalWorms);
         allWorms.AddRange(poisonWorms);
+        allWorms.AddRange(vain);
 
         foreach (var worm in allWorms)
         {
             IWorm w = worm.GetComponent<IWorm>();
-            w?.Eat();
+            w?.Blast();
         }
-
+        yield return new WaitForSeconds(2f);
+        
+        ResetFatness();
+        isPause = false;
     }
 
     public void OnPowerSlideButtonPressed()
@@ -447,6 +475,11 @@ public class PlayerController : MonoBehaviour
 
     private void GameOver()
     {
+        if (current_Score > PlayerPrefs.GetInt("topscore"))
+        {
+            PlayerPrefs.SetInt("topscore", current_Score);
+            highScoreText.text = "TOP :" + current_Score;
+        }
         _deathParticle.SetActive(true);
         _animator.PlayDeath(); // Make sure Animator has "Die" trigger
         StartCoroutine(WaitForShowGameover());
@@ -465,5 +498,22 @@ public class PlayerController : MonoBehaviour
         _audioPlayer?.PlaySound(jumpSound);
         _jumper.Jump();
         _inputHandler.ResetJumpFlag();
+    }
+
+    public void AddScore(int amount)
+    {
+        current_Score += amount;
+        scoreText.text = "" + current_Score;
+
+        int topScore = PlayerPrefs.GetInt("topscore", 0);
+        if (current_Score > topScore)
+        {
+            PlayerPrefs.SetInt("topscore", current_Score);
+            //highScoreText.text = "TOP :" + current_Score;
+        }
+        else
+        {
+            //highScoreText.text = "" + topScore;
+        }
     }
 }

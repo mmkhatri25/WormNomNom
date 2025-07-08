@@ -5,20 +5,15 @@ using DG.Tweening;
 public class Worm : MonoBehaviour, IWorm
 {
     private Animator _animator;
-    private IAudioPlayer _audioPlayer;
-
-    [SerializeField] private AudioClip deathSound;
+    public AudioSource _audioPlayer;
 
     private Tween idleTween; // Tween reference for idle animation
 
     public bool IsPoisonous => throw new System.NotImplementedException();
-
     private void Awake()
     {
         _animator = GetComponent<Animator>();
-        _audioPlayer = GetComponent<IAudioPlayer>();
 
-        
     }
 
     private void OnEnable()
@@ -33,13 +28,14 @@ public class Worm : MonoBehaviour, IWorm
     }
     private Tween shiverTween;
     private Coroutine spinCoroutine;
+
     private void StartShiverEffect()
     {
         // Ensure starting at correct base rotation
-        transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+        transform.rotation = Quaternion.Euler(0f, 180f, 180f);
 
         // Small rotation back and forth on Z axis to simulate shiver
-        shiverTween = transform.DORotate(new Vector3(0f, 180f, 5f), 0.1f)
+        shiverTween = transform.DORotate(new Vector3(0f, 180f, 185f), 0.1f)
             .SetEase(Ease.InOutSine)
             .SetLoops(-1, LoopType.Yoyo);
     }
@@ -49,7 +45,7 @@ public class Worm : MonoBehaviour, IWorm
         if (shiverTween != null && shiverTween.IsActive())
         {
             shiverTween.Kill();
-            transform.rotation = Quaternion.Euler(0f, 180f, 0f); // Reset rotation
+            transform.rotation = Quaternion.Euler(0f, 180f, 180f); // Reset rotation
         }
     }
 
@@ -92,7 +88,7 @@ public class Worm : MonoBehaviour, IWorm
         if (_animator != null)
         {
             _animator.Play("Death");
-            _audioPlayer?.PlaySound(deathSound);
+            _audioPlayer.Play();
 
             // Start moving with effects
             StartCoroutine(FlyIntoMouth(mouth, 0.5f));
@@ -132,19 +128,38 @@ public class Worm : MonoBehaviour, IWorm
 
         StartCoroutine(ReturnAfterDelay(0.1f));
     }
+    public GameObject blastEffect;
 
     private IEnumerator ReturnAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
+        if (blastEffect != null)
+            blastEffect.SetActive(false);
 
-        WormPool.Instance.ReturnWorm(gameObject);
+            WormPool.Instance.ReturnWorm(gameObject);
 
         // Reset scale and rotation after returning to pool, ready for reuse
         transform.localScale = Vector3.one;
         transform.rotation = Quaternion.identity;
-
+        WormPool.Instance.ReturnWorm(gameObject);
         // Restart idle effect after returning to pool (if reused immediately)
         PlayIdleEffect();
+    }
+
+    public void Blast()
+    {
+        if (blastEffect != null)
+        {
+
+            blastEffect.SetActive(true);
+         
+            Sequence squash = DOTween.Sequence();
+            squash.Append(transform.DOScale(new Vector3(0.25f, 0.15f, 1), 0.15f));
+            squash.Append(transform.DOScale(new Vector3(0.1f, 0.1f, 1), 0.35f));
+            _audioPlayer.Play();
+
+            StartCoroutine(ReturnAfterDelay(1.1f));
+        }
     }
 
     public Transform GetTransform()
