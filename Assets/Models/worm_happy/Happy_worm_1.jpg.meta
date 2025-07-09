@@ -160,7 +160,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Happy_worm_1_0: 908503351264398379
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

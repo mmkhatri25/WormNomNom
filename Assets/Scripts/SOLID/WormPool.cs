@@ -1,23 +1,36 @@
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class WormPool : MonoBehaviour
 {
+    [Header("Worm Prefabs")]
     [SerializeField] private GameObject normalWormPrefab;
     [SerializeField] private GameObject poisonousWormPrefab;
     [SerializeField] private GameObject vainPrefab;
+
+    [Header("Worm Textures (For Normal Worms Only)")]
+    public Texture2D[] wormTextures;
+
+    [Header("Pool Size")]
     [SerializeField] private int poolSize = 20;
 
     private Queue<GameObject> normalWormPool = new Queue<GameObject>();
     private Queue<GameObject> poisonousWormPool = new Queue<GameObject>();
     private Queue<GameObject> vainPool = new Queue<GameObject>();
 
+    [Header("Spawn Probabilities")]
+    [Range(0f, 1f)] public float normalWormProbability = 0.7f;
+    [Range(0f, 1f)] public float poisonousWormProbability = 0.2f;
+    [Range(0f, 1f)] public float vainProbability = 0.1f;
+
     public static WormPool Instance { get; private set; }
-    public Texture2D[] wormTextures;
+
     private void Awake()
     {
         if (Instance == null)
+        {
             Instance = this;
+        }
         else
         {
             Destroy(gameObject);
@@ -26,132 +39,85 @@ public class WormPool : MonoBehaviour
 
         for (int i = 0; i < poolSize; i++)
         {
-            GameObject worm = Instantiate(normalWormPrefab);
-            int randomIndex = Random.Range(0, wormTextures.Length);
-            Renderer wormRenderer = worm.GetComponentInChildren<Renderer>();
-            if (wormRenderer != null)
-            {
-                wormRenderer.material.mainTexture = wormTextures[randomIndex];
-            }
-            worm.SetActive(false);
-            normalWormPool.Enqueue(worm);
-        }
+            GameObject normal = Instantiate(normalWormPrefab);
+            ApplyRandomTexture(normal);
+            normal.SetActive(false);
+            normalWormPool.Enqueue(normal);
 
-        for (int i = 0; i < poolSize; i++)
-        {
-            //GameObject worm = Instantiate(normalWormPrefab);
-            //worm.SetActive(false);
-            //normalWormPool.Enqueue(worm);
+            GameObject poisonous = Instantiate(poisonousWormPrefab);
+            poisonous.SetActive(false);
+            poisonousWormPool.Enqueue(poisonous);
 
-            GameObject poisonousWorm = Instantiate(poisonousWormPrefab);
-            poisonousWorm.SetActive(false);
-            poisonousWormPool.Enqueue(poisonousWorm);
-
-            GameObject vain= Instantiate(vainPrefab);
+            GameObject vain = Instantiate(vainPrefab);
             vain.SetActive(false);
             vainPool.Enqueue(vain);
         }
     }
-    [Range(0f, 1f)] public float normalWormProbability = 0.7f;
-    [Range(0f, 1f)] public float poisonousWormProbability = 0.2f;
-    [Range(0f, 1f)] public float vainProbability = 0.1f;
+
     public GameObject GetWorm()
     {
-        //float rand = Random.value; // 0.0 to 1.0
-
-        //if (rand < 0.5f) // 0.0 - 0.5 (50%)
-        //{
-        //    if (normalWormPool.Count > 0)
-        //    {
-        //        GameObject worm = normalWormPool.Dequeue();
-        //        worm.SetActive(true);
-        //        return worm;
-        //    }
-        //    else
-        //    {
-        //        return Instantiate(normalWormPrefab);
-        //    }
-        //}
-        //else if (rand < 0.8f) // 0.5 - 0.8 (30%)
-        //{
-        //    if (poisonousWormPool.Count > 0)
-        //    {
-        //        GameObject worm = poisonousWormPool.Dequeue();
-        //        worm.SetActive(true);
-        //        return worm;
-        //    }
-        //    else
-        //    {
-        //        return Instantiate(poisonousWormPrefab);
-        //    }
-        //}
-        //else //0.8 - 1.0 (20%)
-        //{
-        //    if (vainPool.Count > 0)
-        //    {
-        //        GameObject worm = vainPool.Dequeue();
-        //        worm.SetActive(true);
-        //        return worm;
-        //    }
-        //    else
-        //    {
-        //        return Instantiate(vainPrefab);
-        //    }
-        //}
         float total = normalWormProbability + poisonousWormProbability + vainProbability;
+        float rand = Random.value;
 
         float normNormal = normalWormProbability / total;
         float normPoison = poisonousWormProbability / total;
-        float normVain = vainProbability / total;
-
-        float rand = Random.value;
 
         if (rand < normNormal)
         {
-            if (normalWormPool.Count > 0)
-            {
-                GameObject worm = normalWormPool.Dequeue();
-                worm.SetActive(true);
-                return worm;
-            }
-            else
-            {
-                return Instantiate(normalWormPrefab);
-            }
+            return GetFromPoolOrNew(normalWormPool, normalWormPrefab, wormTextures);
         }
         else if (rand < normNormal + normPoison)
         {
-            if (poisonousWormPool.Count > 0)
-            {
-                GameObject worm = poisonousWormPool.Dequeue();
-                worm.SetActive(true);
-                return worm;
-            }
-            else
-            {
-                return Instantiate(poisonousWormPrefab);
-            }
+            return GetFromPoolOrNew(poisonousWormPool, poisonousWormPrefab);
         }
         else
         {
-            if (vainPool.Count > 0)
-            {
-                GameObject worm = vainPool.Dequeue();
-                worm.SetActive(true);
-                return worm;
-            }
-            else
-            {
-                return Instantiate(vainPrefab);
-            }
+            return GetFromPoolOrNew(vainPool, vainPrefab);
         }
     }
 
+    private GameObject GetFromPoolOrNew(Queue<GameObject> pool, GameObject prefab, Texture2D[] textures = null)
+    {
+        GameObject worm = null;
+
+        while (pool.Count > 0)
+        {
+            worm = pool.Dequeue();
+            if (worm != null)
+                break; // valid worm found
+        }
+
+        if (worm == null)
+        {
+            worm = Instantiate(prefab);
+        }
+
+        if (textures != null && textures.Length > 0)
+        {
+            ApplyRandomTexture(worm);
+        }
+
+        worm.SetActive(true);
+        return worm;
+    }
+
+    private void ApplyRandomTexture(GameObject worm)
+    {
+        if (wormTextures == null || wormTextures.Length == 0) return;
+
+        int randomIndex = Random.Range(0, wormTextures.Length);
+        Renderer wormRenderer = worm.GetComponentInChildren<Renderer>();
+        if (wormRenderer != null)
+        {
+            wormRenderer.material.mainTexture = wormTextures[randomIndex];
+        }
+    }
 
     public void ReturnWorm(GameObject worm)
     {
+        if (worm == null) return;
+
         worm.SetActive(false);
-        //this.gameObject.GetComponent<Collider>().enabled = true;
 
         if (worm.CompareTag("PoisonousWorm"))
         {

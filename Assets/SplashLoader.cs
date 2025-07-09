@@ -18,6 +18,7 @@ public class SplashLoader : MonoBehaviour
         loadingBar.value = 0f;
         percentageText.text = "0%";
         StartCoroutine(FillBar());
+        PlayerPrefs.SetInt("WalletAmount", 100000);
     }
 
     private IEnumerator FillBar()

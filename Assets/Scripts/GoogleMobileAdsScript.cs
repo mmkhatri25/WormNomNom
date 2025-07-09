@@ -321,4 +321,44 @@ public class GoogleMobileAdsScript : MonoBehaviour
         }
         
     }
+    public void ShowRewardBasedVideoForCoin_1()//For coins
+    {
+        if (rewardedAd != null)
+        {
+            rewardedAd.Show((Reward reward) =>
+            {
+
+                RequestAndLoadRewardedAd();
+                Wallet.SetAmount(Wallet.GetAmount() + 100);
+                //Invoke("RequestAndLoadRewardedAd", 3f);
+            });
+        }
+        else
+        {
+
+            print("Rewarded ad Not loaded on showing... coins");
+            RequestAndLoadRewardedAd();
+        }
+
+    }
+    public void ShowRewardBasedVideoForDoubleCoin(int currentCoins)//For coins
+    {
+        if (rewardedAd != null)
+        {
+            rewardedAd.Show((Reward reward) =>
+            {
+
+                RequestAndLoadRewardedAd();
+                int doublecoin = currentCoins * 2;
+                Wallet.SetAmount(Wallet.GetAmount() + doublecoin);
+                //Invoke("RequestAndLoadRewardedAd", 3f);
+            });
+        }
+        else
+        {
+            print("Rewarded ad Not loaded on showing... coins");
+            RequestAndLoadRewardedAd();
+        }
+
+    }
 }

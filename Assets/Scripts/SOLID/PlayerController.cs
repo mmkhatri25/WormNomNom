@@ -9,6 +9,7 @@ using static UnityEngine.Rendering.DebugUI;
 //using UnityEngine.UIElements;
 using TMPro;
 using UnityEngine.UIElements;
+using DG.Tweening;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
@@ -37,7 +38,8 @@ public class PlayerController : MonoBehaviour
     public GameObject Mouth;
     private GameObject _deathParticle;
 
-
+    public ParticleSystem fatIncreasePaticle;
+    public ParticleSystem fartParticle;
 
 
 
@@ -45,7 +47,7 @@ public class PlayerController : MonoBehaviour
     public float _maxHealth;
     private float _currentFatness = 1f;
     private readonly float _maxFatness = 1.5f;
-    private readonly float _fatnessStep = .2f;//0.01f;// original
+    private readonly float _fatnessStep = 0.01f;// original
 
     private float _powerSlideMeter = 0f;
     private readonly float _powerSlideFillPerWorm = 0.2f;
@@ -76,14 +78,18 @@ public class PlayerController : MonoBehaviour
     public List<GameObject> Characters;
     public GameObject ActiveCharacter;
 
-    public TextMeshProUGUI scoreText, highScoreText;
-    public int current_Score;
+    public TextMeshProUGUI scoreText, highScoreText, currentCoins;
+    public int current_Score, current_Coins;
+    
     
 
     private void OnEnable()
     {
        
-        onReviveGame += ResetGameOnRevive;   
+        onReviveGame += ResetGameOnRevive;
+        doubleCoinVideoButton.SetActive(true);
+
+        //fatIncreasePaticle = fatParticle.GetComponent<ParticleSystem>();
     }
     private void OnDisable()
     {
@@ -268,6 +274,7 @@ public class PlayerController : MonoBehaviour
     {
         if (_currentFatness < _maxFatness)
         {
+            fatIncreasePaticle.Play();
             //transform.localScale = Vector3.one * _currentFatness;
             _currentFatness += _fatnessStep;
             Vector3 scale = transform.localScale;
@@ -278,8 +285,28 @@ public class PlayerController : MonoBehaviour
 
     private void ResetFatness()
     {
+
+
         _currentFatness = 1f;
         transform.localScale = Vector3.one;
+
+        // Shrink to 0.7, then grow back to 1
+        transform.DOScale(Vector3.one * 0.7f, 0.3f)
+                 .SetEase(Ease.InOutQuad)
+                 .OnUpdate(() => {
+                     _currentFatness = transform.localScale.x;
+                 })
+                 .OnComplete(() => {
+                     // Scale back to original
+                     transform.DOScale(Vector3.one, 0.3f)
+                              .SetEase(Ease.InOutQuad)
+                              .OnUpdate(() => {
+                                  _currentFatness = transform.localScale.x;
+                              });
+                 });
+
+
+
         ResetPowerSlideMeter();
         leftEye.SetActive(false);
         rightEye.SetActive(false);
@@ -314,8 +341,8 @@ public class PlayerController : MonoBehaviour
 
     private void FillPowerSlide()
     {
-        PowerSlider.fillAmount += _powerSlideFillPerWorm;
-        //PowerSlider.fillAmount += _fatnessStep / 0.5f;
+        //PowerSlider.fillAmount += _powerSlideFillPerWorm;
+        PowerSlider.fillAmount += _fatnessStep / 0.5f;
     }
 
     private void ResetPowerSlideMeter()
@@ -342,18 +369,41 @@ public class PlayerController : MonoBehaviour
 
         PowerSlider.rectTransform.rotation = Quaternion.Euler(0, 0, endRotation);
     }
+
+    public List<GameObject> allWorms;
     IEnumerator ActivatePowerSlide()
     {
-        //_audioPlayer?.PlaySound(powerSound);
+        Vector3 rotation = PowerSlider.transform.localEulerAngles;
+        rotation.z = 0f;
+        PowerSlider.transform.localEulerAngles = rotation;
         PowerButton.interactable = false;
         PowerSlider.fillAmount = 0;
         isPause = true;
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(.3f);
+
+        Vector3 currentRotation = transform.eulerAngles;
+        Vector3 targetRotation = new Vector3(30f, currentRotation.y, currentRotation.z);
+
+        transform.DORotate(targetRotation, 0.5f)
+          .SetEase(Ease.OutQuad)
+          .OnComplete(() =>
+          {
+              
+              fartParticle.Play();
+              _audioPlayer?.PlaySound(powerSound);
+              ResetFatness();
+              transform.DOScaleY(0.9f, 0.025f)
+                .SetLoops(20, LoopType.Yoyo) 
+                .SetEase(Ease.InOutSine);
+
+          });
+        yield return new WaitForSeconds(.4f);
+
         var normalWorms = GameObject.FindGameObjectsWithTag("Worm");
         var poisonWorms = GameObject.FindGameObjectsWithTag("PoisonousWorm");
         var vain = GameObject.FindGameObjectsWithTag("Vain");
 
-        List<GameObject> allWorms = new List<GameObject>();
+        allWorms = new List<GameObject>();
         allWorms.AddRange(normalWorms);
         allWorms.AddRange(poisonWorms);
         allWorms.AddRange(vain);
@@ -363,9 +413,12 @@ public class PlayerController : MonoBehaviour
             IWorm w = worm.GetComponent<IWorm>();
             w?.Blast();
         }
-        yield return new WaitForSeconds(2f);
-        
-        ResetFatness();
+        yield return new WaitForSeconds(1f);
+
+        targetRotation = new Vector3(0f, currentRotation.y, currentRotation.z);
+
+        transform.DORotate(targetRotation, 0.5f)
+                 .SetEase(Ease.OutQuad);
         isPause = false;
     }
 
@@ -439,6 +492,16 @@ public class PlayerController : MonoBehaviour
         GoogleMobileAdsScript.Instance.ShowRewardBasedVideoForCoin();
     }
 
+    public GameObject doubleCoinVideoButton;
+    public void OnDoubleCoinVideoAds()
+    {
+        //AnalyticsManager.Instance.SendEvent_PlayerRevive();
+        
+
+        GoogleMobileAdsScript.Instance.ShowRewardBasedVideoForDoubleCoin(current_Coins);
+        doubleCoinVideoButton.SetActive(false);
+    }
+
     private void ResetGameOnRevive()
     {
         ResetFatness();
@@ -480,6 +543,10 @@ public class PlayerController : MonoBehaviour
             PlayerPrefs.SetInt("topscore", current_Score);
             highScoreText.text = "TOP :" + current_Score;
         }
+        current_Coins = current_Score / 2;
+        currentCoins.text = current_Coins.ToString();
+        Wallet.SetAmount(Wallet.GetAmount() + current_Coins);
+        Wallet.DisplayAmount();
         _deathParticle.SetActive(true);
         _animator.PlayDeath(); // Make sure Animator has "Die" trigger
         StartCoroutine(WaitForShowGameover());

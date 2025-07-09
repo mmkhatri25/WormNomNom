@@ -39,10 +39,38 @@ public class PlayerJumper
     }
 
 
+    //public void Jump()
+    //{
+    //    Debug.Log("_isJumping = "+ _isJumping);
+    //    if (_isJumping) return;
+    //    _isJumping = true;
+
+    //    // Reset velocity to avoid stacking jump forces
+    //    _rigidbody.linearVelocity = new Vector3(0, 0, 0);
+
+    //    // Apply horizontal and vertical jump force
+    //    Vector3 jumpVelocity = new Vector3(0, _jumpForce, 0);
+    //    _rigidbody.AddForce(jumpVelocity, ForceMode.Impulse);
+    //    //_animator.Play("Jump");
+    //    _animator.SetTrigger("Jump");
+    //    _isJumping = false;
+
+    //}
     public void Jump()
     {
-        Debug.Log("_isJumping = "+ _isJumping);
+        Debug.Log("_isJumping = " + _isJumping);
         if (_isJumping) return;
+
+        // Get screen midpoint in world coordinates
+        float screenMidY = Camera.main.ScreenToWorldPoint(new Vector3(0, Screen.height / 2f, Camera.main.nearClipPlane)).y;
+
+        // If player's Y position is already above the midpoint, don't jump
+        if (_transform.position.y > screenMidY)
+        {
+            Debug.Log("Player too high to jump");
+            return;
+        }
+
         _isJumping = true;
 
         // Reset velocity to avoid stacking jump forces
@@ -51,9 +79,9 @@ public class PlayerJumper
         // Apply horizontal and vertical jump force
         Vector3 jumpVelocity = new Vector3(0, _jumpForce, 0);
         _rigidbody.AddForce(jumpVelocity, ForceMode.Impulse);
-        //_animator.Play("Jump");
-        _animator.SetTrigger("Jump");
-        _isJumping = false;
 
+        _animator.SetTrigger("Jump");
+
+        _isJumping = false;
     }
 }
