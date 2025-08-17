@@ -27,7 +27,6 @@ public class Worm : MonoBehaviour, IWorm
         StopShiverEffect();
     }
     private Tween shiverTween;
-    private Coroutine spinCoroutine;
 
     private void StartShiverEffect()
     {
@@ -87,6 +86,7 @@ public class Worm : MonoBehaviour, IWorm
 
         if (_animator != null)
         {
+            Debug.Log("killed worm = "+ this.gameObject.name);
             _animator.Play("Death");
             _audioPlayer.Play();
 
@@ -139,11 +139,11 @@ public class Worm : MonoBehaviour, IWorm
             WormPool.Instance.ReturnWorm(gameObject);
 
         // Reset scale and rotation after returning to pool, ready for reuse
-        transform.localScale = Vector3.one;
-        transform.rotation = Quaternion.identity;
-        WormPool.Instance.ReturnWorm(gameObject);
+        transform.localScale = new Vector3(0.4f,0.4f,0.4f);
+        //transform.rotation = Quaternion.identity;
+        //WormPool.Instance.ReturnWorm(gameObject);
         // Restart idle effect after returning to pool (if reused immediately)
-        PlayIdleEffect();
+        //PlayIdleEffect();
     }
 
     public void Blast()

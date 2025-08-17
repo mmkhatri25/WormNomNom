@@ -11,6 +11,7 @@ TagManager:
   - Eye1
   - Eye2
   - Mouth
+  - Body
   layers:
   - Default
   - TransparentFX

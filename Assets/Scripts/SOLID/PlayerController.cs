@@ -33,9 +33,16 @@ public class PlayerController : MonoBehaviour
     public AudioClip jumpSound, eatSound, powerSound, chickenPain;
 
     [Header("Health System")]
+    public GameObject CharacterBody;
+
     public GameObject leftEye;
     public GameObject rightEye;
     public GameObject Mouth;
+
+    public List<Material>LeftEyeTexture;
+    public List<Material> RightEyeTexture;
+    public List<Material> OriginalTexture;
+
     private GameObject _deathParticle;
 
     public ParticleSystem fatIncreasePaticle;
@@ -47,7 +54,7 @@ public class PlayerController : MonoBehaviour
     public float _maxHealth;
     private float _currentFatness = 1f;
     private readonly float _maxFatness = 1.5f;
-    private readonly float _fatnessStep = 0.01f;// original
+    private readonly float _fatnessStep = 0.2f;//0.01f;// original  set in produciton
 
     private float _powerSlideMeter = 0f;
     private readonly float _powerSlideFillPerWorm = 0.2f;
@@ -100,7 +107,7 @@ public class PlayerController : MonoBehaviour
     {
         highScoreText.text = "TOP :" + PlayerPrefs.GetInt("topscore");
     }
-
+    public int ActiveCharacterIndex;
     private void Awake()
     {
         foreach (var item in Characters)
@@ -108,7 +115,7 @@ public class PlayerController : MonoBehaviour
             item.SetActive(false);
         }
         Debug.Log("CurrentCharacter " + PlayerPrefs.GetInt("CurrentCharacter"));
-
+        ActiveCharacterIndex = PlayerPrefs.GetInt("CurrentCharacter");
         switch (PlayerPrefs.GetInt("CurrentCharacter"))
         {
             case 0:
@@ -142,8 +149,9 @@ public class PlayerController : MonoBehaviour
         PowerButton.interactable = false;
         StartCoroutine(RotateImage(false));
 
-        leftEye = GetChildGameObjectWithTag(ActiveCharacter.transform, "Eye1");
-        rightEye = GetChildGameObjectWithTag(ActiveCharacter.transform, "Eye2");
+        //leftEye = GetChildGameObjectWithTag(ActiveCharacter.transform, "Eye1");
+        CharacterBody = GetChildGameObjectWithTag(ActiveCharacter.transform, "Body");
+        //rightEye = GetChildGameObjectWithTag(ActiveCharacter.transform, "Eye2");
         Mouth  = GetChildGameObjectWithTag(ActiveCharacter.transform, "Mouth");
 
         _deathParticle = ActiveCharacter.transform.GetChild(2).gameObject;
@@ -216,6 +224,8 @@ public class PlayerController : MonoBehaviour
                 _currentHealth--;
                 UpdateHealth(_currentHealth);
                 _eater.PlayEatAnimation();
+                SkinnedMeshRenderer renderer = CharacterBody.GetComponent<SkinnedMeshRenderer>();
+                StartCoroutine(MouthOpenClose(renderer, 2, 180f, .2f));
                 //_playerHealth.EatPoisonousWorm();
                 _audioPlayer?.PlaySound(chickenPain);
             }
@@ -230,6 +240,8 @@ public class PlayerController : MonoBehaviour
             else
             {
                 _eater.PlayEatAnimation();
+                SkinnedMeshRenderer renderer = CharacterBody.GetComponent<SkinnedMeshRenderer>();
+                StartCoroutine(MouthOpenClose(renderer, 2,180f,.2f));
                 GrowFat();
                 FillPowerSlide();
                 AddScore(1);
@@ -253,15 +265,33 @@ public class PlayerController : MonoBehaviour
         }
 
         // Left eye logic: enable once at health == 2
-        if (currentHealth == 2 && !leftEye.activeSelf)
+        if (currentHealth == 2 )
         {
-            leftEye.SetActive(true);
+            //leftEye.SetActive(true);
+            //leftEye.GetComponent<SkinnedMeshRenderer>().material.mainTexture = LeftEyeTexture;
+            SkinnedMeshRenderer renderer = CharacterBody.GetComponent<SkinnedMeshRenderer>();
+            renderer.material = LeftEyeTexture[ActiveCharacterIndex];
+            // Start the funny blowing animation
+            StartCoroutine(AnimateBlendShape(renderer, 1, 100f, 30f ,2f));
+
+            //var mats = renderer.materials;
+            //mats[0] = LeftEyeTexture; // change the first slot
+            //renderer.materials = mats;
+
         }
 
         // Right eye logic: enable once at health == 1
-        if (currentHealth == 1 && !rightEye.activeSelf)
+        if (currentHealth == 1 )
         {
-            rightEye.SetActive(true);
+            //rightEye.SetActive(true);
+            //rightEye.GetComponent<SkinnedMeshRenderer>().material.mainTexture = RightEyeTexture;
+            SkinnedMeshRenderer renderer1 = CharacterBody.GetComponent<SkinnedMeshRenderer>();
+            renderer1.material = RightEyeTexture[ActiveCharacterIndex];
+            StartCoroutine(AnimateBlendShape(renderer1, 0, 100f, 30 ,2f));
+
+            //var mats = renderer1.materials;
+            //mats[0] = RightEyeTexture; // change the first slot
+            //renderer1.materials = mats;
         }
         if (_currentHealth <= 0)
         {
@@ -308,8 +338,13 @@ public class PlayerController : MonoBehaviour
 
 
         ResetPowerSlideMeter();
-        leftEye.SetActive(false);
-        rightEye.SetActive(false);
+        //leftEye.SetActive(false);
+        //rightEye.SetActive(false);
+
+        SkinnedMeshRenderer renderer = CharacterBody.GetComponent<SkinnedMeshRenderer>();
+        renderer.material = OriginalTexture[ActiveCharacterIndex];
+        //StartCoroutine(AnimateBlendShape(renderer, 0, 0f, 0 ,.5f));
+        //StartCoroutine(AnimateBlendShape(renderer, 1, 0f, 0,.5f));
 
     }
     private void ResetHalfFatness()
@@ -341,8 +376,8 @@ public class PlayerController : MonoBehaviour
 
     private void FillPowerSlide()
     {
-        //PowerSlider.fillAmount += _powerSlideFillPerWorm;
-        PowerSlider.fillAmount += _fatnessStep / 0.5f;
+        PowerSlider.fillAmount += _powerSlideFillPerWorm;// test purspose
+        //PowerSlider.fillAmount += _fatnessStep / 0.5f;// original remove comment in production
     }
 
     private void ResetPowerSlideMeter()
@@ -397,7 +432,7 @@ public class PlayerController : MonoBehaviour
                 .SetEase(Ease.InOutSine);
 
           });
-        yield return new WaitForSeconds(.4f);
+        yield return new WaitForSeconds(.7f);
 
         var normalWorms = GameObject.FindGameObjectsWithTag("Worm");
         var poisonWorms = GameObject.FindGameObjectsWithTag("PoisonousWorm");
@@ -412,6 +447,9 @@ public class PlayerController : MonoBehaviour
         {
             IWorm w = worm.GetComponent<IWorm>();
             w?.Blast();
+            
+
+            //worm.Eat(Mouth);
         }
         yield return new WaitForSeconds(1f);
 
@@ -516,8 +554,20 @@ public class PlayerController : MonoBehaviour
 
         ContinueButton.onClick.RemoveListener(OnContinueClicked);
         NoThanksButton.onClick.RemoveListener(OnNoThanksClicked);
-        leftEye.gameObject.SetActive(false);
-        rightEye.gameObject.SetActive(false);
+        //leftEye.gameObject.SetActive(false);
+        //rightEye.gameObject.SetActive(false);
+
+        //leftEye.GetComponent<SkinnedMeshRenderer>().material.mainTexture = OriginalTexture;
+        //rightEye.GetComponent<SkinnedMeshRenderer>().material.mainTexture = OriginalTexture;
+
+
+        // Start the funny blowing animation
+
+        SkinnedMeshRenderer renderer = CharacterBody.GetComponent<SkinnedMeshRenderer>();
+        renderer.material = OriginalTexture[ActiveCharacterIndex];
+        StartCoroutine(AnimateBlendShape(renderer, 0, 0f, 0 ,.5f));
+        StartCoroutine(AnimateBlendShape(renderer, 1, 0f, 0,.5f));
+
         _animator.UpdateAnimation(false, false); // Idle again
     }
     private void OnNoThanksClicked()
@@ -583,4 +633,83 @@ public class PlayerController : MonoBehaviour
             //highScoreText.text = "" + topScore;
         }
     }
+
+    public IEnumerator AnimateBlendShape(SkinnedMeshRenderer renderer, int blendShapeIndex, float targetValue, float puffValue, float speed)
+    {
+        if (renderer == null || blendShapeIndex < 0 || blendShapeIndex >= renderer.sharedMesh.blendShapeCount)
+        {
+            Debug.LogError("Invalid renderer or blend shape index!");
+            yield break;
+        }
+
+        // Step 1 — Quick puff-up
+        float value = 0f;
+        while (value < puffValue)
+        {
+            value += Time.deltaTime * speed * puffValue;
+            renderer.SetBlendShapeWeight(blendShapeIndex, Mathf.Min(value, puffValue));
+            yield return null;
+        }
+
+        // Step 2 — Funny wiggle
+        float wiggleTime = 0.5f; // seconds
+        float elapsed = 0f;
+        while (elapsed < wiggleTime)
+        {
+            float wiggle = Mathf.Sin(elapsed * 20f) * 5f; // small oscillation
+            renderer.SetBlendShapeWeight(blendShapeIndex, puffValue + wiggle);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // Step 3 — Settle down to target
+        while (Mathf.Abs(value - targetValue) > 0.01f)
+        {
+            value = Mathf.Lerp(value, targetValue, Time.deltaTime * speed);
+            renderer.SetBlendShapeWeight(blendShapeIndex, value);
+            yield return null;
+        }
+
+        // Snap to final value to avoid floating point drift
+        renderer.SetBlendShapeWeight(blendShapeIndex, targetValue);
+    }
+    public IEnumerator MouthOpenClose(SkinnedMeshRenderer renderer, int blendShapeIndex, float speed = 0, float holdTime =0)
+    {
+        if (renderer == null || blendShapeIndex < 0 || blendShapeIndex >= renderer.sharedMesh.blendShapeCount)
+        {
+            Debug.LogError("Invalid renderer or blend shape index!");
+            yield break;
+        }
+
+        // Step 1 — Open in 0.5 seconds
+        float openTime = 0.2f;
+        float elapsed = 0f;
+        while (elapsed < openTime)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / openTime; // 0 → 1
+            renderer.SetBlendShapeWeight(blendShapeIndex, Mathf.Lerp(0f, 100f, t));
+            yield return null;
+        }
+
+        // Step 2 — Hold for 0.2 seconds
+        yield return new WaitForSeconds(0.1f);
+
+        // Step 3 — Close in 0.1 seconds
+        float closeTime = 0.05f;
+        elapsed = 0f;
+        while (elapsed < closeTime)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / closeTime; // 0 → 1
+            renderer.SetBlendShapeWeight(blendShapeIndex, Mathf.Lerp(100f, 0f, t));
+            yield return null;
+        }
+
+        // Ensure final value is exactly 0
+        renderer.SetBlendShapeWeight(blendShapeIndex, 0f);
+    }
+
+
+
 }

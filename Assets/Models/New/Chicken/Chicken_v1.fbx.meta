@@ -31,11 +31,11 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: idle (2)
-      takeName: idle
+      name: dead
+      takeName: dead
       internalID: -3419257869308726280
-      firstFrame: 31
-      lastFrame: 52
+      firstFrame: 43
+      lastFrame: 53
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -89,11 +89,11 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: idle
-      takeName: idle
+      name: idle/win
+      takeName: idle/win
       internalID: -5252816984213320552
-      firstFrame: 28
-      lastFrame: 52
+      firstFrame: 27
+      lastFrame: 42
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
