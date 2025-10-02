@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 1e73cd53daa514c5fb0e686cca6010e7
+guid: 8f84b18f1a8d34eacb2632bd9fe9988b
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -31,7 +31,7 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: walk (1)
+      name: walk
       takeName: walk
       internalID: -3419257869308726280
       firstFrame: 1
@@ -58,13 +58,13 @@ ModelImporter:
       transformMask: []
       maskType: 3
       maskSource: {instanceID: 0}
-      additiveReferencePoseFrame: 16
+      additiveReferencePoseFrame: 1
     - serializedVersion: 16
       name: jump
       takeName: jump
       internalID: -2993534804863918692
-      firstFrame: 18
-      lastFrame: 27
+      firstFrame: 17
+      lastFrame: 34
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -89,40 +89,11 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: idle/win
-      takeName: idle/win
-      internalID: -5252816984213320552
-      firstFrame: 27
-      lastFrame: 42
-      wrapMode: 0
-      orientationOffsetY: 0
-      level: 0
-      cycleOffset: 0
-      loop: 0
-      hasAdditiveReferencePose: 0
-      loopTime: 0
-      loopBlend: 0
-      loopBlendOrientation: 0
-      loopBlendPositionY: 0
-      loopBlendPositionXZ: 0
-      keepOriginalOrientation: 0
-      keepOriginalPositionY: 1
-      keepOriginalPositionXZ: 0
-      heightFromFeet: 0
-      mirror: 0
-      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
-      curves: []
-      events: []
-      transformMask: []
-      maskType: 3
-      maskSource: {instanceID: 0}
-      additiveReferencePoseFrame: 0
-    - serializedVersion: 16
-      name: cheers
-      takeName: cheers
-      internalID: -2219653045006951553
-      firstFrame: 53
-      lastFrame: 66
+      name: idle_win
+      takeName: idle_win
+      internalID: 1639698696215707045
+      firstFrame: 35
+      lastFrame: 52
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -150,8 +121,8 @@ ModelImporter:
       name: die
       takeName: die
       internalID: -5455075036266976943
-      firstFrame: 74
-      lastFrame: 85
+      firstFrame: 53
+      lastFrame: 70
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -175,35 +146,6 @@ ModelImporter:
       maskType: 3
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
-    - serializedVersion: 16
-      name: walk
-      takeName: walk
-      internalID: 7492110083201823841
-      firstFrame: 1
-      lastFrame: 16
-      wrapMode: 0
-      orientationOffsetY: 0
-      level: 0
-      cycleOffset: 0
-      loop: 0
-      hasAdditiveReferencePose: 0
-      loopTime: 1
-      loopBlend: 0
-      loopBlendOrientation: 0
-      loopBlendPositionY: 0
-      loopBlendPositionXZ: 0
-      keepOriginalOrientation: 0
-      keepOriginalPositionY: 1
-      keepOriginalPositionXZ: 0
-      heightFromFeet: 0
-      mirror: 0
-      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
-      curves: []
-      events: []
-      transformMask: []
-      maskType: 3
-      maskSource: {instanceID: 0}
-      additiveReferencePoseFrame: 28
     isReadable: 0
   meshes:
     lODScreenPercentages: []
