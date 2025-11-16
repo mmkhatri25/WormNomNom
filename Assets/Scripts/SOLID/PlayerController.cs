@@ -197,6 +197,7 @@ public class PlayerController : MonoBehaviour
             StartCoroutine(ActivatePowerSlide());
             _inputHandler.ResetPowerSlideFlag();
         }
+        _jumper.Tick(); // IMPORTANT
     }
     public bool isVainActive;
     private HashSet<Collider> _eatenWorms = new HashSet<Collider>();

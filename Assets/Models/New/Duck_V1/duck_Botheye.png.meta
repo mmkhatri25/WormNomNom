@@ -160,7 +160,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      duck_Botheye_0: 945094348730552128
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -57,7 +57,7 @@ public class WormSpawner : MonoBehaviour
         }
 
         wormLimitIncreaseTimer += Time.deltaTime;
-        if (wormLimitIncreaseTimer >= 180f)
+        if (wormLimitIncreaseTimer >= 20f)
         {
             wormLimitIncreaseTimer = 0f;
             int increment = Mathf.CeilToInt(maxVisibleWorms * 0.01f);

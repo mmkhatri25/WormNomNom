@@ -8405,9 +8405,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5f088af616ae4952be6f5225ee3f602, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  admob_BannerId: ca-app-pub-8732508290029787/2424950997
+  admob_BannerId: 
   admob_InterstitialId: 
-  admob_rewardedId: ca-app-pub-8732508290029787/8725252577
+  admob_rewardedId: 
   callBackObj: {fileID: 0}
   callBackFunction: 
   coinText: {fileID: 0}
@@ -13129,7 +13129,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3a9863384ba5ed44a881cceae5e95d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  packageName: com.E2AGame.WormNomNom
+  packageName: com.unity.trashdash
 --- !u!1 &1480264368
 GameObject:
   m_ObjectHideFlags: 0
