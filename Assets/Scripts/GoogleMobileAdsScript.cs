@@ -347,10 +347,16 @@ public class GoogleMobileAdsScript : MonoBehaviour
         {
             rewardedAd.Show((Reward reward) =>
             {
+                print("Rewarded shwoing");
 
                 RequestAndLoadRewardedAd();
-                int doublecoin = currentCoins * 2;
+                int doublecoin = currentCoins;
+                print("Rewarded coins ... before coins " + Wallet.GetAmount());
+
                 Wallet.SetAmount(Wallet.GetAmount() + doublecoin);
+                print("Rewarded coins ... after coins "+ Wallet.GetAmount());
+
+                Wallet.DisplayAmount();
                 //Invoke("RequestAndLoadRewardedAd", 3f);
             });
         }

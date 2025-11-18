@@ -85,7 +85,7 @@ public class PlayerController : MonoBehaviour
     public List<GameObject> Characters;
     public GameObject ActiveCharacter;
 
-    public TextMeshProUGUI scoreText, highScoreText, currentCoins;
+    public TextMeshProUGUI scoreText, highScoreText, currentCoins, Totalcoins;
     public int current_Score, current_Coins;
     
     
@@ -537,7 +537,7 @@ public class PlayerController : MonoBehaviour
         //AnalyticsManager.Instance.SendEvent_PlayerRevive();
         
 
-        GoogleMobileAdsScript.Instance.ShowRewardBasedVideoForDoubleCoin(current_Coins);
+        GoogleMobileAdsScript.Instance.ShowRewardBasedVideoForDoubleCoin(current_Score);
         doubleCoinVideoButton.SetActive(false);
     }
 
@@ -594,10 +594,10 @@ public class PlayerController : MonoBehaviour
             PlayerPrefs.SetInt("topscore", current_Score);
             highScoreText.text = "TOP :" + current_Score;
         }
-        current_Coins = current_Score / 2;
-        currentCoins.text = current_Coins.ToString();
-        Wallet.SetAmount(Wallet.GetAmount() + current_Coins);
-        Wallet.DisplayAmount();
+        //current_Coins = current_Score / 2;
+        currentCoins.text = current_Score.ToString();
+        //Wallet.SetAmount(Wallet.GetAmount() + current_Coins);
+        //Wallet.DisplayAmount();
         _deathParticle.SetActive(true);
         _animator.PlayDeath(); // Make sure Animator has "Die" trigger
         StartCoroutine(WaitForShowGameover());
@@ -622,6 +622,9 @@ public class PlayerController : MonoBehaviour
     {
         current_Score += amount;
         scoreText.text = "" + current_Score;
+        //currentCoins.text = current_Coins.ToString();
+        Wallet.SetAmount(Wallet.GetAmount() + 1);
+        Wallet.DisplayAmount();
 
         int topScore = PlayerPrefs.GetInt("topscore", 0);
         if (current_Score > topScore)

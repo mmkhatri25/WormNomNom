@@ -32,6 +32,7 @@ public class Wallet : MonoBehaviour
     // Display player amount to the screen.
     public static void DisplayAmount()
     {
+        Debug.Log("GetAmount() " + GetAmount());
         walletText.text = amount.ToString();
     }
 }
