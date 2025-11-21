@@ -1,9 +1,10 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class WormSpawner : MonoBehaviour
 {
     [Header("Spawn Timing")]
-    [SerializeField] private float initialSpawnInterval = 2f;
+    [SerializeField] private float initialSpawnInterval = 1f;
     [SerializeField] private float minSpawnInterval = 0.5f;
     [SerializeField] private float difficultyRampSpeed = 0.01f;
 
@@ -11,27 +12,56 @@ public class WormSpawner : MonoBehaviour
     [SerializeField] private Vector2 xSpawnRange = new Vector2(-1f, 1f);
     [SerializeField] private float ySpawnOffset = 1f;
 
+    [Header("Spawn Limit")]
+    [SerializeField] private int maxVisibleWorms = 15;
+    private int currentMaxWorms;
+
+    [Header("Worm Probabilities")]
+    [Range(0f, 1f)] public float normalWormProbability = 0.7f;
+    [Range(0f, 1f)] public float poisonousWormProbability = 0.2f;
+    [Range(0f, 1f)] public float vainProbability = 0.1f;
+
     private float spawnTimer;
     private float currentSpawnInterval;
     private Camera mainCamera;
+    private float wormLimitIncreaseTimer = 0f;
+    private List<GameObject> activeWorms = new List<GameObject>();
 
     private void Start()
     {
         mainCamera = Camera.main;
         currentSpawnInterval = initialSpawnInterval;
+        currentMaxWorms = Mathf.CeilToInt(maxVisibleWorms * 0.3f);
+
+        if (WormPool.Instance != null)
+        {
+            WormPool.Instance.normalWormProbability = normalWormProbability;
+            WormPool.Instance.poisonousWormProbability = poisonousWormProbability;
+            WormPool.Instance.vainProbability = vainProbability;
+        }
     }
 
     private void Update()
     {
-        spawnTimer += Time.deltaTime;
+        activeWorms.RemoveAll(w => w == null || !w.activeInHierarchy);
 
-        if (spawnTimer >= currentSpawnInterval)
+        if (activeWorms.Count < currentMaxWorms)
         {
-            spawnTimer = 0f;
-            SpawnWorm();
+            spawnTimer += Time.deltaTime;
+            if (spawnTimer >= currentSpawnInterval)
+            {
+                spawnTimer = 0f;
+                SpawnWorm();
+                currentSpawnInterval = Mathf.Max(minSpawnInterval, currentSpawnInterval - difficultyRampSpeed);
+            }
+        }
 
-            // Gradually reduce spawn interval to ramp up difficulty
-            currentSpawnInterval = Mathf.Max(minSpawnInterval, currentSpawnInterval - difficultyRampSpeed * Time.deltaTime);
+        wormLimitIncreaseTimer += Time.deltaTime;
+        if (wormLimitIncreaseTimer >= 20f)
+        {
+            wormLimitIncreaseTimer = 0f;
+            int increment = Mathf.CeilToInt(maxVisibleWorms * 0.01f);
+            currentMaxWorms = Mathf.Min(maxVisibleWorms, currentMaxWorms + increment);
         }
     }
 
@@ -43,13 +73,13 @@ public class WormSpawner : MonoBehaviour
 
         GameObject worm = WormPool.Instance.GetWorm();
         worm.transform.position = spawnPos;
-      //  worm.transform.rotation = Quaternion.identity;
 
-        // Reset any worm-specific behaviors like falling
         WormFaller faller = worm.GetComponent<WormFaller>();
         if (faller != null)
         {
             faller.ResetWorm();
         }
+
+        activeWorms.Add(worm);
     }
 }

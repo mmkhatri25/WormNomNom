@@ -116,5 +116,9 @@ public class Settings : MonoBehaviour
             vibrationImage.sprite = vibrationOff;
         }
     }
+        public void gotoWebsite(string url)
+        {
+            Application.OpenURL(url);
+        }
 }
 }

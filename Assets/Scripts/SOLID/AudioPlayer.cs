@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class AudioPlayer : MonoBehaviour, IAudioPlayer
 {
-    private AudioSource _audioSource;
+    public AudioSource _audioSource;
 
     private void Awake()
     {

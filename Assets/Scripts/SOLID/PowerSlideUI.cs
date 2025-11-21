@@ -7,4 +7,8 @@ public class PowerSlideUI
     {
         slider.value = Mathf.Clamp01(value);
     }
+    public float CurrentPoweSliderValue(Slider slider)
+    {
+        return slider.value;
+    }
 }

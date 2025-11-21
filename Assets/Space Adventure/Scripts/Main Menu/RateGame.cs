@@ -19,16 +19,16 @@ public class RateGame : MonoBehaviour
         // Get value if game was rated.
         bool gameWasRated = PlayerPrefs.GetInt("GameWasRated", 0) == 1 ? true : false;
         // If game wasn't rated and rate game window wasn't opened.
-        if(!gameWasRated && !rateGameOpened)
+        //if(!gameWasRated && !rateGameOpened)
         {
             // Open rate game window.
             animationController.OpenWindow();
-            rateGameOpened = true;
+            //rateGameOpened = true;
         }
-        else
+        //else
         {
             // Exit game.
-            Exit();
+            //Exit();
         }
     }
 

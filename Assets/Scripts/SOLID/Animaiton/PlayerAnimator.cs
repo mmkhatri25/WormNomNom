@@ -18,20 +18,26 @@ public class PlayerAnimator
     {
         if (isMoving)
         {
-            _animator.Play(Fly);
-            if (isEating)
-                _animator.Play(Eat);
+            //_animator.Play(Fly);
+            _animator.SetBool("Walk", true);
+            //if (isEating)
+                //_animator.Play(Eat);
         }
         else
         {
-            _animator.Play(Idle);
-            if (isEating)
-                _animator.Play(Eat);
+            _animator.SetBool("Walk", false);
+
+            //_animator.Play(Idle);
+            //if (isEating)
+                //_animator.Play(Eat);
         }
     }
     public void PlayDeath()
     {
-        _animator.Play(Death); // Add this trigger to your Animator
+        //_animator.Play(Death); // Add this trigger to your Animator
+        _animator.SetTrigger("Die");
+        Debug.Log("Player die animation");
+
     }
     public void SetPuaseAnimator(float speed)
     {

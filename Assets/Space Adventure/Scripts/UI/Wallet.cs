@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 using TMPro;
 
-namespace SpaceAdventure.Asset
-{
+//namespace SpaceAdventure.Asset
+//{
 public class Wallet : MonoBehaviour
 {
     private static int amount;
@@ -30,9 +30,10 @@ public class Wallet : MonoBehaviour
     }
 
     // Display player amount to the screen.
-    private static void DisplayAmount()
+    public static void DisplayAmount()
     {
+        Debug.Log("GetAmount() " + GetAmount());
         walletText.text = amount.ToString();
     }
 }
-}
+//}

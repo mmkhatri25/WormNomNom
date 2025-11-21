@@ -21,21 +21,26 @@ public class PlayerEater
         RaycastHit hit;
         if (Physics.Raycast(_playerTransform.position, Vector3.down, out hit, _eatRange))
         {
+
+            PlayEatAnimation();
+
             IWorm worm = hit.collider.GetComponent<IWorm>();
             if (worm != null)
             {
                 Debug.Log("hit layer - " + hit.transform.gameObject.name);
 
                 worm.Eat();
-                PlayEatAnimation();
                 GrowFat();
             }
         }
     }
 
-    private void PlayEatAnimation()
+    public void PlayEatAnimation()
     {
-        _animator.Play("Eat");
+        //_animator.Play("Eat");
+        Debug.Log("PlayEatAnimation - ");
+
+        _animator.SetTrigger("Jump");
     }
 
     private void GrowFat()
